@@ -21,7 +21,7 @@ fun WelcomeDescription() {
         .padding(16.dp)) {
 
         Text(
-            text = "PUSH YOURSELF\nTO THE LIMIT",
+            text = "TRACKING YOUR LIFE\nSTYLE WITH US",
             color = Color.White,
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold,
