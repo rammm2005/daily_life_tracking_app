@@ -62,8 +62,8 @@ fun AppNavHost(sessionManager: SessionManager) {
             val context = LocalContext.current
             val repo = TipRepository(context)
 
-            CreateUpdateTipScreen(navController = navController) { tip ->
-                repo.createTip(tip)
+            CreateUpdateTipScreen(navController = navController) { tip, imagePaths  ->
+                repo.createTip(tip, imagePaths)
             }
         }
 
@@ -77,8 +77,8 @@ fun AppNavHost(sessionManager: SessionManager) {
             }
 
             tip?.let {
-                CreateUpdateTipScreen(navController = navController, tip = it) { updated ->
-                    repo.updateTip(it._id ?: "", updated)
+                CreateUpdateTipScreen(navController = navController, tip = it) { updated, imagePaths ->
+                    repo.updateTip(it._id ?: "", updated, imagePaths)
                 }
             }
         }

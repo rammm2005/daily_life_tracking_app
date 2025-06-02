@@ -4,9 +4,10 @@ import org.bson.types.ObjectId
 
 data class Tip(
     val _id: String? = null,
-    val Image: String,
+    val images: List<String> = emptyList(),
     val title: String,
     val content: String,
     val description_short: String?,
+//    val userId: String?,
     val type: String
 )

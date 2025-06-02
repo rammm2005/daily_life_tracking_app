@@ -3,6 +3,9 @@ package com.example.gym_app.network
 import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Tip
 import com.example.gym_app.model.User
+import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -29,11 +32,32 @@ interface ApiService {
     @GET("api/tips/{userId}")
     suspend fun getTipsByUserId(@Path("userId") userId: String): Response<TipListResponse>
 
-    @POST("api/tips")
-    suspend fun createTip(@Body tip: Tip): Response<TipResponse>
+    @GET("api/tips/all/data")
+    suspend fun getAllTips(): TipListResponse
 
+    @Multipart
+    @POST("api/tips")
+    suspend fun createTipWithImage(
+        @Part("title") title: RequestBody,
+        @Part("content") content: RequestBody,
+        @Part("description_short") descriptionShort: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("userId") userId: RequestBody,
+        @Part images: List<MultipartBody.Part>
+    ): Response<TipResponse>
+
+
+    @Multipart
     @PUT("api/tips/{id}")
-    suspend fun updateTip(@Path("id") id: String, @Body tip: Tip): Response<TipResponse>
+    suspend fun updateTipWithImage(
+        @Path("id") id: String,
+        @Part("title") title: RequestBody,
+        @Part("content") content: RequestBody,
+        @Part("description_short") descriptionShort: RequestBody,
+        @Part("type") type: RequestBody,
+        @Part("userId") userId: RequestBody,
+        @Part images: List<MultipartBody.Part>
+    ): Response<TipResponse>
 
     @DELETE("api/tips/{id}")
     suspend fun deleteTip(@Path("id") id: String): Response<ApiResponse>
@@ -64,6 +88,7 @@ data class VerifyOtpResponse(val success: Boolean, val message: String?, val rol
 data class UserResponse(
     val success: Boolean,
     val message: String?,
+    @SerializedName("userId")
     val Id: String?
 )
 

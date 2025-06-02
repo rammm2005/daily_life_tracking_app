@@ -1,7 +1,14 @@
 package com.example.gym_app.activity.tip
 
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -14,30 +21,33 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.gym_app.R
 import com.example.gym_app.model.Tip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateUpdateTipScreen(
     navController: NavController,
     tip: Tip? = null,
-    onSubmit: suspend (Tip) -> Unit
+    onSubmit: suspend (Tip, List<Uri>) -> Unit
 ) {
     val context = LocalContext.current
 
     var title by remember { mutableStateOf(tip?.title ?: "") }
     var content by remember { mutableStateOf(tip?.content ?: "") }
-    var image by remember { mutableStateOf(tip?.Image ?: "") }
+    var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var shortDescription by remember { mutableStateOf(tip?.description_short ?: "") }
     var type by remember { mutableStateOf(tip?.type ?: "") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Error states
+
     var titleError by remember { mutableStateOf(false) }
     var imageError by remember { mutableStateOf(false) }
     var shortDescError by remember { mutableStateOf(false) }
@@ -49,6 +59,15 @@ fun CreateUpdateTipScreen(
 
     val orangeColor = colorResource(id = R.color.orange)
     val darkBlue = colorResource(id = R.color.darkBlue)
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.size <= 5) {
+            imageUris = uris
+            imageError = false
+        }
+    }
 
     Scaffold(
         containerColor = colorResource(id = R.color.mainColor),
@@ -71,11 +90,13 @@ fun CreateUpdateTipScreen(
             )
         },
     ) { padding ->
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -114,31 +135,46 @@ fun CreateUpdateTipScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    OutlinedTextField(
-                        value = image,
-                        onValueChange = {
-                            image = it
-                            imageError = false
+
+                    Button(
+                        onClick = {
+                            launcher.launch("image/*")
                         },
-                        label = { Text("URL Gambar") },
-                        isError = imageError,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = orangeColor,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedLabelColor = orangeColor,
-                            unfocusedLabelColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            disabledTextColor = Color.LightGray,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
-                        )
-                    )
+                        colors = ButtonDefaults.buttonColors(containerColor = orangeColor)
+                    ) {
+                        Text(text = if (imageUris.isEmpty() && tip?.images.isNullOrEmpty()) "Pilih Gambar" else "Ganti Gambar", color = Color.White)                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+
+                    if (imageUris.isNotEmpty()) {
+                        imageUris.forEach { uri ->
+                            Image(
+                                painter = rememberAsyncImagePainter(uri),
+                                contentDescription = "Preview Gambar",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .padding(8.dp)
+                            )
+                        }
+                    } else if (!tip?.images.isNullOrEmpty()) {
+                        tip!!.images.forEach { imageUrl ->
+                            Image(
+                                painter = rememberAsyncImagePainter(imageUrl),
+                                contentDescription = "Preview Gambar",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+
+
                     if (imageError) {
-                        Text("URL Gambar tidak boleh kosong", color = Color.Red, fontSize = 12.sp)
+                        Text("Gambar harus dipilih", color = Color.Red, fontSize = 12.sp)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -259,26 +295,35 @@ fun CreateUpdateTipScreen(
                     Button(
                         onClick = {
                             titleError = title.isBlank()
-                            imageError = image.isBlank()
+                            imageError = (imageUris.isEmpty() && tip?.images.isNullOrEmpty())
                             shortDescError = shortDescription.isBlank()
                             typeError = type.isBlank()
                             contentError = content.isBlank()
 
                             if (titleError || imageError || shortDescError || typeError || contentError) return@Button
+//                            if (titleError || shortDescError || typeError || contentError) return@Button
 
                             isLoading = true
+                            Log.d("TipButton", "Mulai proses submit")
                             CoroutineScope(Dispatchers.IO).launch {
+                                val imageList = if (imageUris.isNotEmpty()) {
+                                    imageUris
+                                } else {
+                                    tip?.images?.map { it.toUri() } ?: emptyList()
+                                }
                                 onSubmit(
                                     Tip(
                                         _id = tip?._id,
-                                        Image = image,
+                                        images = imageList.map {it.toString()},
                                         title = title,
                                         content = content,
                                         description_short = shortDescription,
                                         type = type
-                                    )
+                                    ),
+                                    imageList
                                 )
                                 withContext(Dispatchers.Main) {
+                                    Log.d("TipButton", "Selesai submit, kembali ke halaman sebelumnya")
                                     isLoading = false
                                     navController.popBackStack()
                                 }
@@ -289,7 +334,8 @@ fun CreateUpdateTipScreen(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = orangeColor,
                             contentColor = Color.White
-                        )
+                        ),
+                        enabled = !isLoading
                     ) {
                         Text(if (tip == null) "Simpan" else "Update")
                     }
