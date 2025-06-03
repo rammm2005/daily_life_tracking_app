@@ -28,15 +28,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun TipScreen(navController: NavController, isAdmin: Boolean) {
     val context = LocalContext.current
-    val tipRepository = remember { TipRepository(context) }
+    val api = remember { TipRepository(context) }
     var tips by remember { mutableStateOf<List<Tip>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(true) {
-        val result = tipRepository.getAllTips()
-        Log.d("TIPS", "Result: $result")
-        tips = result ?: emptyList()
+    LaunchedEffect(Unit) {
+        val response = api.getAllTips()
+        Log.d("TIPS", "Result: $response")
+        tips = response ?: emptyList()
     }
+
 
     Scaffold(
         containerColor = colorResource(id = R.color.mainColor),
@@ -78,82 +79,11 @@ fun TipScreen(navController: NavController, isAdmin: Boolean) {
         ) {
             if (tips.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Image(
-                                painter = painterResource(id = R.drawable.not_avaible),
-                                contentDescription = "Empty state image",
-                                modifier = Modifier
-                                    .size(450.dp)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Belum ada tips tersedia.",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
+                    EmptyTipsView()
                 }
-
-        } else {
+            } else {
                 items(tips) { tip ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(4.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            if (tip.images.isNotEmpty()) {
-                                AsyncImage(
-                                    model = tip.images[0],
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(180.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = tip.title, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = tip.description_short ?: "", style = MaterialTheme.typography.bodySmall)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(text = "Tipe: ${tip.type}", style = MaterialTheme.typography.bodySmall)
-
-                            if (isAdmin) {
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp)
-                                ) {
-                                    TextButton(onClick = {
-                                        navController.navigate("edit_tip/${tip._id}")
-                                    }) {
-                                        Text("Edit")
-                                    }
-                                    TextButton(onClick = {
-                                        coroutineScope.launch {
-                                            tip._id?.let {
-                                                tipRepository.deleteTip(it)
-                                                tips = tipRepository.getAllTips() ?: emptyList()
-                                            }
-                                        }
-                                    }) {
-                                        Text("Hapus", color = MaterialTheme.colorScheme.error)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    TipCard(tip = tip, isAdmin = isAdmin, navController = navController, tipRepository = api)
                 }
             }
         }

@@ -3,6 +3,7 @@
     <domain-config cleartextTrafficPermitted="true" includeSubdomains="false">
         <domain tools:ignore="NetworkSecurityConfig">192.168.1.8</domain>
         <domain tools:ignore="NetworkSecurityConfig">192.168.1.76</domain>
+        <domain tools:ignore="NetworkSecurityConfig">10.10.78.203</domain>
         <domain tools:ignore="NetworkSecurityConfig">
             192.168.1.14
         </domain>

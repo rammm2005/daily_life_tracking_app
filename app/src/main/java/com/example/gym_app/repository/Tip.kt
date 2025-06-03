@@ -20,11 +20,36 @@ class TipRepository(private val context: Context) {
     private val userRepository = UserRepository()
 
 
+//    suspend fun getTipById(tipId: String): Tip? {
+//        return try {
+//            val response = api.getTipById(tipId)
+//            if (response.isSuccessful) response.body() else null
+//        } catch (e: Exception) {
+//            null
+//        }
+//    }
+
+    suspend fun getTipById(tipId: String): Tip? {
+        return try {
+            val response = api.getTipById(tipId)
+            if (response.success) {
+                Log.d("TipRepo", "Successfully fetched tip: $response")
+                response.data
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 
     suspend fun getAllTips(): List<Tip>? {
         return try {
             val response = api.getAllTips()
             if (response.success) {
+                Log.d("TipRepo", "Successfully fetched tips: $response")
                 response.data
             } else {
                 null

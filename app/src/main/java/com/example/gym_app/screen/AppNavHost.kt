@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.gym_app.activity.mainactivity.MainButtomBar
 import com.example.gym_app.activity.mainactivity.WorkoutDataProvider.getData
 import com.example.gym_app.activity.tip.CreateUpdateTipScreen
+import com.example.gym_app.activity.tip.DetailTipScreen
 import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.TipRepository
 
@@ -81,6 +82,11 @@ fun AppNavHost(sessionManager: SessionManager) {
                     repo.updateTip(it._id ?: "", updated, imagePaths)
                 }
             }
+        }
+
+        composable("detail_tip/{tipId}") { backStackEntry ->
+            val tipId = backStackEntry.arguments?.getString("tipId") ?: return@composable
+            DetailTipScreen(navController = navController, tipId = tipId)
         }
 
     }

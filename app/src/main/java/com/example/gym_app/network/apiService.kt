@@ -35,6 +35,9 @@ interface ApiService {
     @GET("api/tips/all/data")
     suspend fun getAllTips(): TipListResponse
 
+    @GET("api/tips/detail/{id}")
+    suspend fun getTipById(@Path("id") id: String): TipResponse
+
     @Multipart
     @POST("api/tips")
     suspend fun createTipWithImage(
@@ -105,6 +108,7 @@ data class TipListResponse(
     val message: String?,
     val data: List<Tip>
 )
+
 
 // ---------- MEAL ----------
 
