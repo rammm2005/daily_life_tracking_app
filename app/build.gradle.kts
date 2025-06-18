@@ -85,6 +85,16 @@ dependencies {
     // Bycrpyt Password
     implementation ("org.mindrot:jbcrypt:0.4")
 
+    // Image Slider
+    implementation ("com.google.accompanist:accompanist-pager:0.34.0")
+    implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")
+
+
+    // Text Editor Library
+    implementation("com.halilibo.compose-richtext:richtext-commonmark:1.0.0-alpha02")
+    implementation("com.halilibo.compose-richtext:richtext-ui-material3:1.0.0-alpha02")
+
+
 
     // API Fetcher
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
@@ -95,7 +105,6 @@ dependencies {
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
     // Foundation
-    implementation ("androidx.compose.foundation:foundation:1.4.3")
 
 
 

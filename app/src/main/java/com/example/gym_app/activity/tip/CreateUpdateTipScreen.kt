@@ -160,7 +160,9 @@ fun CreateUpdateTipScreen(
                             )
                         }
                     } else if (!tip?.images.isNullOrEmpty()) {
-                        tip!!.images.forEach { imageUrl ->
+                        val images = tip.images
+                        Log.d("CreateUpdateTipScreen", "Images: $images")
+                        images.forEach { imageUrl ->
                             Image(
                                 painter = rememberAsyncImagePainter(imageUrl),
                                 contentDescription = "Preview Gambar",
@@ -171,6 +173,7 @@ fun CreateUpdateTipScreen(
                             )
                         }
                     }
+
 
 
                     if (imageError) {

@@ -1,6 +1,7 @@
 package com.example.gym_app.screen
 
 import SessionManager
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -23,9 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.gym_app.activity.mainactivity.MainButtomBar
 import com.example.gym_app.activity.mainactivity.WorkoutDataProvider.getData
+import com.example.gym_app.activity.meal.CreateUpdateMealScreen
 import com.example.gym_app.activity.tip.CreateUpdateTipScreen
 import com.example.gym_app.activity.tip.DetailTipScreen
 import com.example.gym_app.model.Tip
+import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 
 @Composable
@@ -55,6 +58,20 @@ fun AppNavHost(sessionManager: SessionManager) {
         composable("meal_screen") {
             MealScreen(navController, isAdmin)
         }
+
+        composable("meal_create") {
+            val context = LocalContext.current
+            val repo = MealRepository(context)
+
+            CreateUpdateMealScreen(navController = navController) { meal, imageUri ->
+                if (imageUri != null) {
+                    repo.createMeal(meal, imageUri)
+                } else {
+                    Log.e("CreateMeal", "Image is required but was null")
+                }
+            }
+        }
+
         composable("tip_screen") {
             TipScreen(navController, isAdmin)
         }
@@ -73,16 +90,30 @@ fun AppNavHost(sessionManager: SessionManager) {
             val repo = TipRepository(context)
             var tip by remember { mutableStateOf<Tip?>(null) }
 
-            LaunchedEffect(Unit) {
-                tip = repo.getTips()?.find { it._id == backStackEntry.arguments?.getString("tipId") }
+            val tipId = backStackEntry.arguments?.getString("tipId")
+            Log.d("AppNavHost", "Navigating to edit_tip with tipId: $tipId")
+
+            LaunchedEffect(tipId) {
+                tipId?.let {
+                    val result = repo.getTipById(it)
+                    if (result != null) {
+                        Log.d("AppNavHost", "Tip found: ${result.title}")
+                        tip = result
+                    } else {
+                        Log.e("AppNavHost", "Tip with ID $it not found.")
+                    }
+                }
             }
 
             tip?.let {
                 CreateUpdateTipScreen(navController = navController, tip = it) { updated, imagePaths ->
+                    Log.d("AppNavHost", "Updating tip with ID: ${it._id}")
                     repo.updateTip(it._id ?: "", updated, imagePaths)
                 }
             }
         }
+
+
 
         composable("detail_tip/{tipId}") { backStackEntry ->
             val tipId = backStackEntry.arguments?.getString("tipId") ?: return@composable

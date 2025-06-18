@@ -22,6 +22,8 @@ import coil.compose.AsyncImage
 import com.example.gym_app.R
 import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.TipRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +85,15 @@ fun TipScreen(navController: NavController, isAdmin: Boolean) {
                 }
             } else {
                 items(tips) { tip ->
-                    TipCard(tip = tip, isAdmin = isAdmin, navController = navController, tipRepository = api)
+                    TipCard(tip = tip, isAdmin = isAdmin, navController = navController, tipRepository = api,
+                        onDeleted = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val response = api.getAllTips()
+                                Log.d("TIPS", "Result After Delete: $response")
+                                tips = response ?: emptyList()
+                            }
+                        }
+                        )
                 }
             }
         }

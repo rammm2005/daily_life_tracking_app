@@ -66,14 +66,40 @@ interface ApiService {
     suspend fun deleteTip(@Path("id") id: String): Response<ApiResponse>
 
     // ---------- MEAL ----------
+    @GET("api/meals/all/data")
+    suspend fun getAllMeals(): MealListResponse
+
+    @GET("api/meals/detail/{id}")
+    suspend fun getMealById(@Path("id") id: String): MealResponse
+
     @GET("api/meals/{userId}")
     suspend fun getMealsByUserId(@Path("userId") userId: String): Response<MealListResponse>
 
+    @Multipart
     @POST("api/meals")
-    suspend fun createMeal(@Body meal: Meal): Response<MealResponse>
+    suspend fun createMealWithImage(
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("ingredients") ingredients: RequestBody,
+        @Part("calories") calories: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("userId") userId: RequestBody,
+        @Part image: MultipartBody.Part
+    ): Response<MealResponse>
 
+    @Multipart
     @PUT("api/meals/{id}")
-    suspend fun updateMeal(@Path("id") id: String, @Body meal: Meal): Response<MealResponse>
+    suspend fun updateMealWithImage(
+        @Path("id") id: String,
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("ingredients") ingredients: RequestBody,
+        @Part("calories") calories: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("userId") userId: RequestBody,
+        @Part image: MultipartBody.Part
+    ): Response<MealResponse>
+
 
     @DELETE("api/meals/{id}")
     suspend fun deleteMeal(@Path("id") id: String): Response<ApiResponse>

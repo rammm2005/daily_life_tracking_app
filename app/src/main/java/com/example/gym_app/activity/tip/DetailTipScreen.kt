@@ -38,6 +38,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clipToBounds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -130,16 +134,63 @@ fun DetailTipScreen(navController: NavController, tipId: String) {
                                 .verticalScroll(scrollState)
                                 .padding(16.dp)
                         ) {
-                            tip?.images?.firstOrNull()?.let { imageUrl ->
-                                AsyncImage(
-                                    model = imageUrl,
-                                    contentDescription = "Tip Image",
+                            val images = tip?.images ?: emptyList()
+                            val pagerState = rememberPagerState(
+                                initialPage = 0,
+                                pageCount = { images.size }
+                            )
+
+                            if (images.isNotEmpty()) {
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(220.dp)
-                                        .clip(MaterialTheme.shapes.medium),
-                                    contentScale = ContentScale.Crop
-                                )
+                                        .clip(MaterialTheme.shapes.medium)
+                                ) {
+                                    if (images.size == 1) {
+                                        AsyncImage(
+                                            model = images.first(),
+                                            contentDescription = "Tip Image",
+                                            modifier = Modifier.matchParentSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        HorizontalPager(
+                                            state = pagerState,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(220.dp)
+                                        ) { page ->
+                                            AsyncImage(
+                                                model = images[page],
+                                                contentDescription = "Tip Image $page",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(220.dp)
+                                                    .clip(MaterialTheme.shapes.medium),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+
+                                        Row(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .padding(8.dp),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                            repeat(images.size) { index ->
+                                                val color = if (pagerState.currentPage == index) Color.White else Color.Gray
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 4.dp)
+                                                        .size(8.dp)
+                                                        .background(color = color, shape = CircleShape)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
 
