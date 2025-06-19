@@ -1,6 +1,7 @@
 package com.example.gym_app.screen
 
 import SessionManager
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,9 +28,11 @@ import com.example.gym_app.activity.mainactivity.WorkoutDataProvider.getData
 import com.example.gym_app.activity.meal.CreateUpdateMealScreen
 import com.example.gym_app.activity.tip.CreateUpdateTipScreen
 import com.example.gym_app.activity.tip.DetailTipScreen
+import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
+import androidx.core.net.toUri
 
 @Composable
 fun AppNavHost(sessionManager: SessionManager) {
@@ -68,6 +71,38 @@ fun AppNavHost(sessionManager: SessionManager) {
                     repo.createMeal(meal, imageUri)
                 } else {
                     Log.e("CreateMeal", "Image is required but was null")
+                }
+            }
+        }
+
+        composable("edit_meal/{mealId}") { backStackEntry ->
+            val context = LocalContext.current
+            val repo = MealRepository(context)
+            var meal by remember { mutableStateOf<Meal?>(null) }
+
+            val mealId = backStackEntry.arguments?.getString("mealId")
+            Log.d("AppNavHost", "Navigating to edit_meal with mealId: $mealId")
+
+            LaunchedEffect(mealId) {
+                mealId?.let {
+                    val result = repo.getMealById(it)
+                    if (result != null) {
+                        Log.d("AppNavHost", "Meal found: ${result.title}")
+                        meal = result
+                    } else {
+                        Log.e("AppNavHost", "Meal with ID $it not found.")
+                    }
+                }
+            }
+
+            meal?.let {
+                CreateUpdateMealScreen(
+                    navController = navController,
+                    meal = it
+                ) { updated, imageUri ->
+                    val parsedUri = meal?.image!!.toUri()
+                    Log.d("AppNavHost", "Updating Meal with ID: ${it._id}")
+                    repo.updateMeal(it._id ?: "", updated, parsedUri)
                 }
             }
         }

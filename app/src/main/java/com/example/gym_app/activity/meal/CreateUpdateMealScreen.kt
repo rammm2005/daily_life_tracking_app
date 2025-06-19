@@ -50,6 +50,8 @@ fun CreateUpdateMealScreen(
     var calories by remember { mutableStateOf(meal?.calories?.toString() ?: "") }
     var category by remember { mutableStateOf(meal?.category ?: "") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val categoryOptions = listOf("Sarapan", "Makan Siang", "Makan Malam", "Snack / Cheat Day", "Pre-Workout", "Post-Workout", "Makanan Diet", "Makanan Kesehatan", "Makanan Bulking")
+    var expanded by remember { mutableStateOf(false) }
 
     var titleError by remember { mutableStateOf(false) }
     var caloriesError by remember { mutableStateOf(false) }
@@ -124,19 +126,54 @@ fun CreateUpdateMealScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            OutlinedTextField(
-                value = category,
-                onValueChange = {
-                    category = it
-                    categoryError = false
-                },
-                label = { Text("Kategori", color = Color.White) },
-                isError = categoryError,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(color = Color.White)
-            )
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = { category = it },
+                    readOnly = true,
+                    label = { Text("Kategori", color = Color.White) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.LightGray,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.LightGray
+                    ),
+                    isError = categoryError,
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    textStyle = TextStyle(color = Color.White)
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    categoryOptions.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            text = { Text(selectionOption) },
+                            onClick = {
+                                category = selectionOption
+                                categoryError = false
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
             if (categoryError) {
-                Text("Kategori tidak boleh kosong", color = Color.Red, fontSize = 12.sp)
+                Text(
+                    text = "Kategori tidak boleh kosong",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))

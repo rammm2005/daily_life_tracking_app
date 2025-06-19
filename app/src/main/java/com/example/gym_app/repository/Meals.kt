@@ -3,6 +3,7 @@ package com.example.gym_app.repository
 import SessionManager
 import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Log
 import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Tip
@@ -82,6 +83,10 @@ class MealRepository(private val context: Context) {
             val categoryPart = meal.category.toRequestBody("text/plain".toMediaTypeOrNull())
             val userIdPart = userIdValue.toRequestBody("text/plain".toMediaTypeOrNull())
             val imagePart = getImageMultipartPart(imageUri)
+            if (imagePart == null) {
+                Log.e("MealRepo", "Gagal membuat MultipartBody.Part dari imageUri")
+                return null
+            }
 
             val response = api.createMealWithImage(
                 title = titlePart,
@@ -120,6 +125,11 @@ class MealRepository(private val context: Context) {
             val userIdPart = userIdValue.toRequestBody("text/plain".toMediaTypeOrNull())
             val imagePart = getImageMultipartPart(imageUri)
 
+            if (imagePart == null) {
+                Log.e("MealRepo", "Gagal membuat MultipartBody.Part dari imageUri")
+                return null
+            }
+
             val response = api.updateMealWithImage(
                 id = id,
                 title = titlePart,
@@ -156,10 +166,33 @@ class MealRepository(private val context: Context) {
     }
 
 
-    private fun getImageMultipartPart(uri: Uri): MultipartBody.Part {
-        val file = File(uri.path ?: "")
-        val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-        return MultipartBody.Part.createFormData("image", file.name, requestFile)
+    private fun getFileName(context: Context, uri: Uri): String {
+        var name = "uploaded_image_${System.currentTimeMillis()}"
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    val displayName = it.getString(nameIndex)
+                    if (displayName != null) name = displayName
+                }
+            }
+        }
+        return name
+    }
+
+
+    private fun getImageMultipartPart(imageUri: Uri): MultipartBody.Part? {
+        return try {
+            val fileName = getFileName(context, imageUri)
+            val inputStream = context.contentResolver.openInputStream(imageUri) ?: return null
+            val requestBody = inputStream.readBytes().toRequestBody("image/*".toMediaTypeOrNull())
+            inputStream.close()
+            MultipartBody.Part.createFormData("meal", fileName, requestBody)
+        } catch (e: Exception) {
+            Log.e("MealRepo", "Error creating multipart for URI: $imageUri", e)
+            null
+        }
     }
 
 }

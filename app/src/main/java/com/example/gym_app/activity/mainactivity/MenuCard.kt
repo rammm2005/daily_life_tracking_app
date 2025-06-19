@@ -27,14 +27,14 @@ import kotlinx.coroutines.launch
 data class MenuItem(val iconRes: Int, val label: String)
 
 val menuItems = listOf(
-    MenuItem(R.drawable.btn_1, "Workout"),
-    MenuItem(R.drawable.btn_2, "Meal"),
-    MenuItem(R.drawable.btn_3, "Progress"),
+    MenuItem(R.drawable.excercise, "Workout"),
+    MenuItem(R.drawable.healthy_food, "Meal"),
+    MenuItem(R.drawable.lifestyle, "Progress"),
     MenuItem(R.drawable.robot, "Chat"),
-    MenuItem(R.drawable.btn_4, "Tips"),
-    MenuItem(R.drawable.btn_1, "Schedule"),
-    MenuItem(R.drawable.btn_2, "Goal"),
-    MenuItem(R.drawable.btn_3, "More")
+    MenuItem(R.drawable.chat, "Tips"),
+    MenuItem(R.drawable.schedule, "Schedule"),
+    MenuItem(R.drawable.success, "Goal"),
+    MenuItem(R.drawable.apps, "More")
 )
 
 @Composable
