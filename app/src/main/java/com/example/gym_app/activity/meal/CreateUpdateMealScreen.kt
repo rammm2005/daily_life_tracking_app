@@ -1,5 +1,6 @@
 package com.example.gym_app.activity.meal
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -44,13 +44,18 @@ fun CreateUpdateMealScreen(
 ) {
     val context = LocalContext.current
 
-    var title by remember { mutableStateOf(meal?.title ?: "") }
-    var description by remember { mutableStateOf(TextFieldValue(meal?.description ?: "")) }
-    var ingredients by remember { mutableStateOf(TextFieldValue(meal?.ingredients?.joinToString("\n") ?: "")) }
-    var calories by remember { mutableStateOf(meal?.calories?.toString() ?: "") }
-    var category by remember { mutableStateOf(meal?.category ?: "") }
+    var title by remember { mutableStateOf(meal?.title.orEmpty()) }
+    var description by remember { mutableStateOf(TextFieldValue(meal?.description.orEmpty())) }
+    var ingredients by remember { mutableStateOf(TextFieldValue(meal?.ingredients?.joinToString("\n").orEmpty())) }
+    var calories by remember { mutableStateOf(meal?.calories?.toString().orEmpty()) }
+    var category by remember { mutableStateOf(meal?.category.orEmpty()) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    val categoryOptions = listOf("Sarapan", "Makan Siang", "Makan Malam", "Snack / Cheat Day", "Pre-Workout", "Post-Workout", "Makanan Diet", "Makanan Kesehatan", "Makanan Bulking")
+
+    val categoryOptions = listOf(
+        "Sarapan", "Makan Siang", "Makan Malam",
+        "Snack / Cheat Day", "Pre-Workout", "Post-Workout",
+        "Makanan Diet", "Makanan Kesehatan", "Makanan Bulking"
+    )
     var expanded by remember { mutableStateOf(false) }
 
     var titleError by remember { mutableStateOf(false) }
@@ -58,9 +63,13 @@ fun CreateUpdateMealScreen(
     var categoryError by remember { mutableStateOf(false) }
     var imageError by remember { mutableStateOf(false) }
 
+    var showDescPreview by remember { mutableStateOf(false) }
+    var showIngredientsPreview by remember { mutableStateOf(false) }
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
+        Log.d("ImagePicker", "Image selected: $uri")
         imageUri = uri
         imageError = false
     }
@@ -69,14 +78,18 @@ fun CreateUpdateMealScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(if (meal == null) "Tambah Meal" else "Edit Meal", fontSize = 20.sp)
+                    Text(if (meal == null) "Tambah Meal" else "Edit Meal", fontSize = 20.sp, color = Color.White)
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = Color.White
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colorResource(id = R.color.mainColor),
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
@@ -168,12 +181,7 @@ fun CreateUpdateMealScreen(
                 }
             }
             if (categoryError) {
-                Text(
-                    text = "Kategori tidak boleh kosong",
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
-                )
+                Text("Kategori tidak boleh kosong", color = Color.Red, fontSize = 12.sp)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -181,21 +189,21 @@ fun CreateUpdateMealScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Deskripsi (Markdown: **bold**, *italic*, - list, 1. list)", color = Color.White) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp, max = 250.dp),
-                singleLine = false,
+                label = { Text("Deskripsi (Markdown)", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(color = Color.White)
             )
-            if (description.text.isNotBlank()) {
-                Text("Preview Deskripsi:", color = Color.White, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+
+            TextButton(onClick = { showDescPreview = !showDescPreview }) {
+                Text(if (showDescPreview) "Sembunyikan Deskripsi" else "Lihat Deskripsi")
+            }
+            if (showDescPreview) {
+                RichText(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorResource(id = R.color.darkBlue))
                 ) {
-                    RichText(modifier = Modifier.padding(8.dp)) {
+                    ProvideTextStyle(value = LocalTextStyle.current.copy(color = Color.White)) {
                         Markdown(content = description.text)
                     }
                 }
@@ -206,57 +214,67 @@ fun CreateUpdateMealScreen(
             OutlinedTextField(
                 value = ingredients,
                 onValueChange = { ingredients = it },
-                label = { Text("Bahan-bahan (Markdown: **bold**, *italic*, - list, 1. list)", color = Color.White) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp, max = 250.dp),
-                singleLine = false,
+                label = { Text("Bahan-bahan (Pisahkan dengan enter)", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(color = Color.White)
             )
-            if (ingredients.text.isNotBlank()) {
-                Text("Preview Bahan-bahan:", color = Color.White, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+
+            TextButton(onClick = { showIngredientsPreview = !showIngredientsPreview }) {
+                Text(if (showIngredientsPreview) "Sembunyikan Bahan" else "Lihat Bahan")
+            }
+            if (showIngredientsPreview) {
+                RichText(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorResource(id = R.color.darkBlue))
                 ) {
-                    RichText(modifier = Modifier.padding(8.dp)) {
+                    ProvideTextStyle(value = LocalTextStyle.current.copy(color = Color.White)) {
                         Markdown(content = ingredients.text)
                     }
                 }
             }
 
+
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = { launcher.launch("image/*") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.orange),
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = if (imageUri == null && meal?.image.isNullOrEmpty()) "Pilih Gambar" else "Ganti Gambar")
-            }
+            if (meal == null) {
+                Button(
+                    onClick = { launcher.launch("image/*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.orange),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = if (imageUri != null) "Gambar Dipilih" else "Pilih Gambar")
+                }
 
-            imageUri?.let {
-                Image(
-                    painter = rememberAsyncImagePainter(ImageRequest.Builder(context).data(it).build()),
-                    contentDescription = "Preview Gambar",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(top = 8.dp)
-                )
-            } ?: meal?.image?.let {
-                Image(
-                    painter = rememberAsyncImagePainter(it),
-                    contentDescription = "Gambar Meal",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(top = 8.dp)
-                )
+                imageUri?.let {
+                    Image(
+                        painter = rememberAsyncImagePainter(ImageRequest.Builder(context).data(it).build()),
+                        contentDescription = "Preview Gambar",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(top = 8.dp)
+                    )
+                }
+
+                if (imageError) {
+                    Text("Gambar harus dipilih", color = Color.Red, fontSize = 12.sp)
+                }
+            } else {
+                meal.image?.let {
+                    Image(
+                        painter = rememberAsyncImagePainter(it),
+                        contentDescription = "Gambar Lama",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(top = 8.dp)
+                    )
+                    Text("Menggunakan gambar lama", color = Color.LightGray, fontSize = 12.sp)
+                }
             }
 
             if (imageError) {
@@ -270,26 +288,24 @@ fun CreateUpdateMealScreen(
                     titleError = title.isBlank()
                     caloriesError = calories.toIntOrNull() == null
                     categoryError = category.isBlank()
-                    imageError = imageUri == null && meal?.image.isNullOrEmpty()
+                    imageError = meal == null && imageUri == null
 
                     if (titleError || caloriesError || categoryError || imageError) {
-                        Log.d("Validation", "Error: title=$titleError, calories=$caloriesError, category=$categoryError, image=$imageError")
+                        Log.d("Validation", "Error Detected")
                         return@Button
                     }
 
                     CoroutineScope(Dispatchers.IO).launch {
-                        onSubmit(
-                            Meal(
-                                _id = meal?._id,
-                                title = title,
-                                description = description.text,
-                                ingredients = ingredients.text.split("\n").filter { it.isNotBlank() },
-                                calories = calories.toInt(),
-                                category = category,
-                                image = meal?.image ?: "",
-                            ),
-                            imageUri
+                        val newMeal = Meal(
+                            _id = meal?._id,
+                            title = title,
+                            description = description.text,
+                            ingredients = ingredients.text.split("\n").filter { it.isNotBlank() },
+                            calories = calories.toInt(),
+                            category = category,
+                            image = if (imageUri != null) "" else meal?.image.orEmpty()
                         )
+                        onSubmit(newMeal, imageUri)
                         withContext(Dispatchers.Main) {
                             navController.popBackStack()
                         }

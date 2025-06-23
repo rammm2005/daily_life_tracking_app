@@ -100,6 +100,19 @@ interface ApiService {
         @Part image: MultipartBody.Part
     ): Response<MealResponse>
 
+    @Multipart
+    @PUT("api/meals/{id}")
+    suspend fun updateMealWithoutImage(
+        @Path("id") id: String,
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("ingredients") ingredients: RequestBody,
+        @Part("calories") calories: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("userId") userId: RequestBody
+    ): Response<MealResponse>
+
+
 
     @DELETE("api/meals/{id}")
     suspend fun deleteMeal(@Path("id") id: String): Response<ApiResponse>

@@ -33,6 +33,7 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
+import com.example.gym_app.activity.meal.DetailMealScreen
 
 @Composable
 fun AppNavHost(sessionManager: SessionManager) {
@@ -75,6 +76,12 @@ fun AppNavHost(sessionManager: SessionManager) {
             }
         }
 
+        composable("detail_meal/{mealId}") { backStackEntry ->
+            val mealId = backStackEntry.arguments?.getString("mealId") ?: return@composable
+            DetailMealScreen(navController = navController, mealId = mealId)
+        }
+
+
         composable("edit_meal/{mealId}") { backStackEntry ->
             val context = LocalContext.current
             val repo = MealRepository(context)
@@ -94,6 +101,7 @@ fun AppNavHost(sessionManager: SessionManager) {
                     }
                 }
             }
+
 
             meal?.let {
                 CreateUpdateMealScreen(
