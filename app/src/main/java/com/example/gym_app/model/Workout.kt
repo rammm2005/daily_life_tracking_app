@@ -4,7 +4,7 @@ import org.bson.types.ObjectId
 import java.io.Serializable
 
 data class Workout(
-    val _id: ObjectId = ObjectId(),
+    val _id: String? = null,
     val title: String,
     val description: String,
     val category: String? = null,

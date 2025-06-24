@@ -8,171 +8,60 @@ object WorkoutDataProvider {
 
     fun getData(): List<Workout> = listOf(
         Workout(
+            _id = ObjectId().toString(),
             title = "Running",
             description = "Desc...",
+            category = "Cardio",
             picPath = "pic_1",
             kcal = 160,
             durationAll = "9 min",
+            difficulty = "Beginner",
+            video_url = null,
             lessons = getLessions1()
         ),
         Workout(
+            _id = ObjectId().toString(),
             title = "Stretching",
             description = "Desc...",
+            category = "Flexibility",
             picPath = "pic_2",
             kcal = 230,
             durationAll = "85 min",
+            difficulty = "Intermediate",
+            video_url = null,
             lessons = getLessions2()
         ),
         Workout(
+            _id = ObjectId().toString(),
             title = "Yoga",
             description = "Desc...",
+            category = "Mind & Body",
             picPath = "pic_3",
             kcal = 180,
             durationAll = "65 min",
+            difficulty = "Advanced",
+            video_url = null,
             lessons = getLessions3()
         )
     )
 
     fun getLessions1(): List<Lession> = listOf(
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 1",
-            description = "Introduction to warm-up exercises",
-            duration = "03:46",
-            link = "HBPMvFkpNgE",
-            picPath = "pic_1_1",
-            repetitions = 10,
-            rest_seconds = 30,
-            video_url = "https://youtube.com/watch?v=HBPMvFkpNgE"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 2",
-            description = "Stretching basics",
-            duration = "03:41",
-            link = "K6I24WgiiPw",
-            picPath = "pic_1_2",
-            repetitions = 15,
-            rest_seconds = 20,
-            video_url = "https://youtube.com/watch?v=K6I24WgiiPw"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 3",
-            description = "Core strengthening",
-            duration = "01:57",
-            link = "Zc08v4YYOeA",
-            picPath = "pic_1_3",
-            repetitions = 12,
-            rest_seconds = 25,
-            video_url = "https://youtube.com/watch?v=Zc08v4YYOeA"
-        )
+        Lession("","Lesson 1", "03:46", "https://youtube.com/watch?v=HBPMvFkpNgE","Blalalalalal"),
+        Lession("","Lesson 2", "03:41", "https://youtube.com/watch?v=K6I24WgiiPw","Blalalalalal"),
+        Lession("","Lesson 3", "01:57", "https://youtube.com/watch?v=Zc08v4YYOeA","Blalalalalal")
     )
 
     fun getLessions2(): List<Lession> = listOf(
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 1",
-            description = "Basic stretching routine",
-            duration = "20:23",
-            link = "L3eImBAXT7I",
-            picPath = "pic_3_1",
-            repetitions = 8,
-            rest_seconds = 40,
-            video_url = "https://youtube.com/watch?v=L3eImBAXT7I"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 2",
-            description = "Intermediate stretching",
-            duration = "18:27",
-            link = "47ExgzO7FlU",
-            picPath = "pic_3_2",
-            repetitions = 10,
-            rest_seconds = 35,
-            video_url = "https://youtube.com/watch?v=47ExgzO7FlU"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 3",
-            description = "Advanced stretches",
-            duration = "32:25",
-            link = "OmLx8tmaQ-4",
-            picPath = "pic_3_3",
-            repetitions = 12,
-            rest_seconds = 30,
-            video_url = "https://youtube.com/watch?v=OmLx8tmaQ-4"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 4",
-            description = "Cool down",
-            duration = "07:52",
-            link = "w86EalEoFRY",
-            picPath = "pic_3_4",
-            repetitions = 6,
-            rest_seconds = 50,
-            video_url = "https://youtube.com/watch?v=w86EalEoFRY"
-        )
+        Lession("","Lesson 1", "20:23", "https://youtube.com/watch?v=L3eImBAXT7I","Blalalalalal"),
+        Lession("","Lesson 2", "18:27", "https://youtube.com/watch?v=47ExgzO7FlU","Blalalalalal"),
+        Lession("","Lesson 3", "32:25", "https://youtube.com/watch?v=OmLx8tmaQ-4","Blalalalalal"),
+        Lession("","Lesson 4", "07:52", "https://youtube.com/watch?v=w86EalEoFRY","Blalalalalal")
     )
 
     fun getLessions3(): List<Lession> = listOf(
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 1",
-            description = "Beginner yoga session",
-            duration = "23:00",
-            link = "v7AYKMP6rOE",
-            picPath = "pic_3_1",
-            repetitions = 5,
-            rest_seconds = 60,
-            video_url = "https://youtube.com/watch?v=v7AYKMP6rOE"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 2",
-            description = "Sun salutations",
-            duration = "27:00",
-            link = "Eml2xnoLpYE",
-            picPath = "pic_3_2",
-            repetitions = 7,
-            rest_seconds = 55,
-            video_url = "https://youtube.com/watch?v=Eml2xnoLpYE"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 3",
-            description = "Yoga for flexibility",
-            duration = "25:00",
-            link = "v7SN-d4qXx0",
-            picPath = "pic_3_3",
-            repetitions = 8,
-            rest_seconds = 45,
-            video_url = "https://youtube.com/watch?v=v7SN-d4qXx0"
-        ),
-        Lession(
-            _id = ObjectId(),
-            workoutId = ObjectId(),
-            title = "Lesson 4",
-            description = "Relaxation techniques",
-            duration = "21:00",
-            link = "LqXZ628YNj4",
-            picPath = "pic_3_4",
-            repetitions = 6,
-            rest_seconds = 50,
-            video_url = "https://youtube.com/watch?v=LqXZ628YNj4"
-        )
+        Lession("","Lesson 1", "23:00", "https://youtube.com/watch?v=v7AYKMP6rOE","Blalalalalal"),
+        Lession("","Lesson 2", "27:00", "https://youtube.com/watch?v=Eml2xnoLpYE","Blalalalalal"),
+        Lession("","Lesson 3", "25:00", "https://youtube.com/watch?v=v7SN-d4qXx0","Blalalalalal"),
+        Lession("","Lesson 4", "21:00", "https://youtube.com/watch?v=LqXZ628YNj4","Blalalalalal")
     )
-
-
 }

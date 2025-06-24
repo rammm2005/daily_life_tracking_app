@@ -3,6 +3,7 @@ package com.example.gym_app.network
 import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Tip
 import com.example.gym_app.model.User
+import com.example.gym_app.model.Workout
 import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -116,6 +117,59 @@ interface ApiService {
 
     @DELETE("api/meals/{id}")
     suspend fun deleteMeal(@Path("id") id: String): Response<ApiResponse>
+
+    // ---------- WORKOUT ----------
+    @GET("api/workouts/all")
+    suspend fun getAllWorkouts(): WorkoutListResponse
+
+    @GET("api/workouts/{id}")
+    suspend fun getWorkoutById(@Path("id") id: String): WorkoutResponse
+
+    @Multipart
+    @POST("api/workouts")
+    suspend fun createWorkoutWithImage(
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("kcal") kcal: RequestBody,
+        @Part("difficulty") difficulty: RequestBody,
+        @Part("video_url") videoUrl: RequestBody,
+        @Part("durationAll") durationAll: RequestBody,
+        @Part("lessons") lessons: RequestBody,
+        @Part image: MultipartBody.Part
+    ): Response<WorkoutResponse>
+
+    @Multipart
+    @PUT("api/workouts/{id}")
+    suspend fun updateWorkoutWithImage(
+        @Path("id") id: String,
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("kcal") kcal: RequestBody,
+        @Part("difficulty") difficulty: RequestBody,
+        @Part("video_url") videoUrl: RequestBody,
+        @Part("durationAll") durationAll: RequestBody,
+        @Part("lessons") lessons: RequestBody,
+        @Part image: MultipartBody.Part
+    ): Response<WorkoutResponse>
+
+    @Multipart
+    @PUT("api/workouts/{id}")
+    suspend fun updateWorkoutWithoutImage(
+        @Path("id") id: String,
+        @Part("title") title: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("kcal") kcal: RequestBody,
+        @Part("difficulty") difficulty: RequestBody,
+        @Part("video_url") videoUrl: RequestBody,
+        @Part("durationAll") durationAll: RequestBody,
+        @Part("lessons") lessons: RequestBody
+    ): Response<WorkoutResponse>
+
+    @DELETE("api/workouts/{id}")
+    suspend fun deleteWorkout(@Path("id") id: String): Response<ApiResponse>
 }
 
 // ---------- AUTH ----------
@@ -161,4 +215,19 @@ data class MealListResponse(
     val success: Boolean,
     val message: String?,
     val data: List<Meal>
+)
+
+
+// ---------- WORKOUT ----------
+
+data class WorkoutResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: Workout?
+)
+
+data class WorkoutListResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: List<Workout>
 )

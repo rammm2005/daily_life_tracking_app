@@ -34,6 +34,8 @@ import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
 import com.example.gym_app.activity.meal.DetailMealScreen
+import com.example.gym_app.activity.workout.CreateUpdateWorkoutScreen
+import com.example.gym_app.repository.WorkoutRepository
 
 @Composable
 fun AppNavHost(sessionManager: SessionManager) {
@@ -56,7 +58,20 @@ fun AppNavHost(sessionManager: SessionManager) {
                 }
         }
         composable("workout_screen") {
-            WorkoutScreen(navController)
+            WorkoutScreen(navController, isAdmin)
+        }
+
+        composable("create_workout") {
+            val context = LocalContext.current
+            val repo = WorkoutRepository(context)
+
+            CreateUpdateWorkoutScreen(navController = navController) { workout, imageUri ->
+                if (imageUri != null) {
+                    repo.createWorkout(workout, imageUri)
+                } else {
+                    Log.e("CreateMeal", "Image is required but was null")
+                }
+            }
         }
 
         composable("meal_screen") {
