@@ -3,6 +3,7 @@ package com.example.gym_app.screen
 import SessionManager
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -19,6 +20,7 @@ import com.example.gym_app.activity.workout.WorkoutScreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,10 +36,14 @@ import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
 import com.example.gym_app.activity.meal.DetailMealScreen
+import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
+import com.example.gym_app.activity.schedule.ScheduleScreen
 import com.example.gym_app.activity.workout.CreateUpdateWorkoutScreen
 import com.example.gym_app.activity.workout.WorkoutDetail
 import com.example.gym_app.model.Workout
+import com.example.gym_app.repository.ReminderRepository
 import com.example.gym_app.repository.WorkoutRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavHost(sessionManager: SessionManager) {
@@ -59,6 +65,42 @@ fun AppNavHost(sessionManager: SessionManager) {
                         navController = navController  )
                 }
         }
+
+
+
+        composable("schedule_screen") {
+            ScheduleScreen(navController)
+        }
+
+        composable("create_schedule") {
+            val context = LocalContext.current
+
+            CreateUpdateScheduleScreen(
+                navController = navController,
+                onCreate = { reminder ->
+                    Toast.makeText(context, "Reminder berhasil dibuat!", Toast.LENGTH_SHORT).show()
+                },
+//                onUpdate = { reminder ->
+//                    Toast.makeText(context, "Reminder berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+//                }
+            )
+        }
+
+        composable("edit_schedule/{scheduleId}") { backStackEntry ->
+            val context = LocalContext.current
+            val scheduleId = backStackEntry.arguments?.getString("scheduleId")
+
+            CreateUpdateScheduleScreen(
+                navController = navController,
+                scheduleId = scheduleId,
+                onUpdate = { reminder ->
+                    Toast.makeText(context, "Reminder berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+
+
+
         composable("workout_screen") {
             WorkoutScreen(navController, isAdmin)
         }

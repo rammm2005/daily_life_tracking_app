@@ -1,13 +1,13 @@
 package com.example.gym_app.model
 
-import org.bson.types.ObjectId
-
 data class Reminder(
-    val _id: ObjectId = ObjectId(),
-    val userId: ObjectId,
+    val _id: String? = null,
     val type: String,
     val title: String,
     val schedule: String,
+    val description: String,
     val method: List<String>,
-    val days: List<String>
+    val days: List<String>,
+    val status: String, // 'active', 'paused', 'done'
+    val repeat: String  // 'none', 'daily', 'weekly', 'monthly'
 )

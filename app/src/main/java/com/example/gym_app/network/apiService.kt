@@ -1,6 +1,7 @@
 package com.example.gym_app.network
 
 import com.example.gym_app.model.Meal
+import com.example.gym_app.model.Reminder
 import com.example.gym_app.model.Tip
 import com.example.gym_app.model.User
 import com.example.gym_app.model.Workout
@@ -170,6 +171,51 @@ interface ApiService {
 
     @DELETE("api/workouts/{id}")
     suspend fun deleteWorkout(@Path("id") id: String): Response<ApiResponse>
+
+    // ---------- REMINDER ----------
+    @GET("api/reminders/user/{userId}")
+    suspend fun getRemindersByUserId(
+        @Path("userId") userId: String
+    ): Response<ReminderListResponse>
+
+    @GET("api/reminders/{id}")
+    suspend fun getReminderById(
+        @Path("id") id: String
+    ): Response<ReminderResponse>
+
+    @FormUrlEncoded
+    @POST("api/reminders")
+    suspend fun createReminder(
+        @Field("userId") userId: String,
+        @Field("type") type: String,
+        @Field("title") title: String,
+        @Field("schedule") schedule: String,
+        @Field("description") description: String,
+        @Field("method") method: String,
+        @Field("days") days: String,
+        @Field("status") status: String,
+        @Field("repeat") repeat: String
+    ): Response<ReminderResponse>
+
+    @FormUrlEncoded
+    @PUT("api/reminders/{id}")
+    suspend fun updateReminder(
+        @Path("id") id: String,
+        @Field("type") type: String,
+        @Field("title") title: String,
+        @Field("schedule") schedule: String,
+        @Field("description") description: String,
+        @Field("method") method: String,
+        @Field("days") days: String,
+        @Field("status") status: String,
+        @Field("repeat") repeat: String
+    ): Response<ReminderResponse>
+
+
+    @DELETE("api/reminders/{id}")
+    suspend fun deleteReminder(
+        @Path("id") id: String
+    ): Response<ApiResponse>
 }
 
 // ---------- AUTH ----------
@@ -231,3 +277,18 @@ data class WorkoutListResponse(
     val message: String?,
     val data: List<Workout>
 )
+
+// ---------- REMINDER ----------
+
+data class ReminderResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: Reminder?
+)
+
+data class ReminderListResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: List<Reminder>
+)
+
