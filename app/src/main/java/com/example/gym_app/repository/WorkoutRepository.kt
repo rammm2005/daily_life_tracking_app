@@ -13,6 +13,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
+import java.io.File
 
 class WorkoutRepository(private val context: Context) {
 
@@ -80,8 +81,8 @@ class WorkoutRepository(private val context: Context) {
             val userId = userRepository.getUserIdByEmail(email) ?: return null
 
             val parts = getWorkoutRequestParts(workout, userId)
-            val imagePart = imageUri?.let { getImageMultipart(it) }
-
+            val imagePart = imageUri?.takeIf { it.scheme == "content" || it.scheme == "file" }?.let { getImageMultipart(it) }
+            Log.d("WorkoutRepo", "Image URI scheme: ${imageUri?.scheme}, URI: $imageUri")
             val response = if (imagePart != null) {
                 api.updateWorkoutWithImage(
                     id = id,
@@ -134,7 +135,7 @@ class WorkoutRepository(private val context: Context) {
     private fun getWorkoutRequestParts(workout: Workout, userId: String): WorkoutRequestParts {
         return WorkoutRequestParts(
             title = workout.title.toRequestBody("text/plain".toMediaTypeOrNull()),
-            description = (workout.description ?: "").toRequestBody("text/plain".toMediaTypeOrNull()),
+            description = workout.description.toRequestBody("text/plain".toMediaTypeOrNull()),
             category = (workout.category ?: "").toRequestBody("text/plain".toMediaTypeOrNull()),
             kcal = (workout.kcal?.toString() ?: "0").toRequestBody("text/plain".toMediaTypeOrNull()),
             difficulty = (workout.difficulty ?: "").toRequestBody("text/plain".toMediaTypeOrNull()),
@@ -144,7 +145,8 @@ class WorkoutRepository(private val context: Context) {
                 mapOf(
                     "title" to l.title,
                     "duration" to l.duration,
-                    "video_url" to l.video_url
+                    "videoUrl" to l.videoUrl,
+                    "description" to l.description,
                 )
             }).toString().toRequestBody("text/plain".toMediaTypeOrNull())
         )
@@ -152,12 +154,21 @@ class WorkoutRepository(private val context: Context) {
 
     private fun getImageMultipart(uri: Uri): MultipartBody.Part {
         val contentResolver = context.contentResolver
-        val inputStream = contentResolver.openInputStream(uri) ?: throw IllegalArgumentException("Invalid URI")
+        val inputStream = contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Invalid URI: $uri")
+
         val fileName = getFileName(uri)
-        val bytes = inputStream.readBytes()
-        val requestFile = bytes.toRequestBody("image/*".toMediaTypeOrNull())
+        val tempFile = File.createTempFile("upload", fileName, context.cacheDir)
+        tempFile.outputStream().use { output ->
+            inputStream.use { input ->
+                input.copyTo(output)
+            }
+        }
+
+        val requestFile = tempFile.readBytes().toRequestBody("image/*".toMediaTypeOrNull())
         return MultipartBody.Part.createFormData("pic", fileName, requestFile)
     }
+
 
     private fun getFileName(uri: Uri): String {
         var name = "image.jpg"

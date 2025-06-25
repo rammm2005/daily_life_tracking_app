@@ -85,6 +85,10 @@ dependencies {
     // Bycrpyt Password
     implementation ("org.mindrot:jbcrypt:0.4")
 
+
+    // YouTube Player
+    implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+
     // Image Slider
     implementation ("com.google.accompanist:accompanist-pager:0.34.0")
     implementation ("com.google.accompanist:accompanist-pager-indicators:0.34.0")

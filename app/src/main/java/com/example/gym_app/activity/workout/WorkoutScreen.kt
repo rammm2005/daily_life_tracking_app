@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.gym_app.R
 import com.example.gym_app.model.Workout
 import com.example.gym_app.repository.WorkoutRepository
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +34,18 @@ fun WorkoutScreen(navController: NavController, isAdmin: Boolean) {
 
     var workouts by remember { mutableStateOf<List<Workout>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedDifficulty by remember { mutableStateOf("All") }
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    val filteredWorkouts = workouts.filter {
+        val matchesSearch = it.title.contains(searchQuery, ignoreCase = true) ||
+                it.category?.contains(searchQuery, ignoreCase = true) == true
+        val matchesDifficulty = selectedDifficulty == "All" || it.difficulty == selectedDifficulty
+        val matchesCategory = selectedCategory == "All" || it.category == selectedCategory
+        matchesSearch && matchesDifficulty && matchesCategory
+    }
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -100,11 +113,24 @@ fun WorkoutScreen(navController: NavController, isAdmin: Boolean) {
                     EmptyState(isAdmin = isAdmin, navController = navController)
                 }
                 else -> {
-                    WorkoutList(
-                        workouts = workouts,
-                        isAdmin = isAdmin,
-                        navController = navController
-                    )
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        SearchAndFilterSection(
+                            searchQuery = searchQuery,
+                            onSearchQueryChange = { searchQuery = it },
+                            selectedDifficulty = selectedDifficulty,
+                            onDifficultyChange = { selectedDifficulty = it },
+                            selectedCategory = selectedCategory,
+                            onCategoryChange = { selectedCategory = it }
+                        )
+
+                        WorkoutList(
+                            workouts = filteredWorkouts,
+                            isAdmin = isAdmin,
+                            navController = navController,
+                            workoutRepository = workoutRepository,
+                            onWorkoutsUpdated = { workouts = it }
+                        )
+                    }
                 }
             }
         }
@@ -250,8 +276,11 @@ fun EmptyState(isAdmin: Boolean, navController: NavController) {
 fun WorkoutList(
     workouts: List<Workout>,
     isAdmin: Boolean,
-    navController: NavController
+    navController: NavController,
+    workoutRepository: WorkoutRepository,
+    onWorkoutsUpdated: (List<Workout>) -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -300,10 +329,17 @@ fun WorkoutList(
                 workout = workout,
                 isAdmin = isAdmin,
                 onClick = {
-                    navController.navigate("workoutDetail/${workout._id}")
+                    navController.navigate("workout_detail/${workout._id}")
                 },
                 onEditClick = {
-                    navController.navigate("editWorkout/${workout._id}")
+                    navController.navigate("edit_workout/${workout._id}")
+                },
+                onDeleteClick = {
+                    coroutineScope.launch {
+                        workoutRepository.deleteWorkout(workout._id ?: "")
+                        val updated = workoutRepository.getAllWorkouts() ?: emptyList()
+                        onWorkoutsUpdated(updated)
+                    }
                 }
             )
         }

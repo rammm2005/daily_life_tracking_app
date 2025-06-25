@@ -7,7 +7,7 @@ data class Lession(
     val _id: String? = null,
     val title: String,
     val duration: String,
-    val video_url: String,
+    val videoUrl: String,
     val description: String,
 ): Serializable
 

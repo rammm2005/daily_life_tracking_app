@@ -35,6 +35,8 @@ import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
 import com.example.gym_app.activity.meal.DetailMealScreen
 import com.example.gym_app.activity.workout.CreateUpdateWorkoutScreen
+import com.example.gym_app.activity.workout.WorkoutDetail
+import com.example.gym_app.model.Workout
 import com.example.gym_app.repository.WorkoutRepository
 
 @Composable
@@ -70,6 +72,44 @@ fun AppNavHost(sessionManager: SessionManager) {
                     repo.createWorkout(workout, imageUri)
                 } else {
                     Log.e("CreateMeal", "Image is required but was null")
+                }
+            }
+        }
+
+        composable("workout_detail/{workoutId}") { backStackEntry ->
+            val workoutId = backStackEntry.arguments?.getString("workoutId") ?: return@composable
+            WorkoutDetail(navController = navController, workoutId = workoutId)
+        }
+
+        composable("edit_workout/{workoutId}") { backStackEntry ->
+            val context = LocalContext.current
+            val repo = WorkoutRepository(context)
+            var workout by remember { mutableStateOf<Workout?>(null) }
+
+            val workoutId = backStackEntry.arguments?.getString("workoutId")
+            Log.d("AppNavHost", "Navigating to edit_workout with WorkoutId: $workoutId")
+
+            LaunchedEffect(workoutId) {
+                workoutId?.let {
+                    val result = repo.getWorkoutById(it)
+                    if (result != null) {
+                        Log.d("AppNavHost", "workout found: ${result.title}")
+                        workout = result
+                    } else {
+                        Log.e("AppNavHost", "workout with ID $it not found.")
+                    }
+                }
+            }
+
+
+            workout?.let {
+                CreateUpdateWorkoutScreen(
+                    navController = navController,
+                    workout = it
+                ) { updated, imageUri ->
+                    Log.d("AppNavHost", "Updating workout with ID: ${it._id}")
+                    Log.d("AppNavHost", "Updating workout with Image URI: $imageUri")
+                    repo.updateWorkout(it._id ?: "", updated, imageUri)
                 }
             }
         }

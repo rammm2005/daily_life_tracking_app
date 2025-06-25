@@ -1,6 +1,7 @@
 package com.example.gym_app.activity.workout
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -71,7 +72,7 @@ fun CreateUpdateWorkoutScreen(
             && lessons.any {
         it.title.isNotBlank() &&
                 it.description.isNotBlank() &&
-                it.video_url.isNotBlank() &&
+                it.videoUrl.isNotBlank() &&
                 it.duration.isNotBlank()
     }
 
@@ -112,7 +113,14 @@ fun CreateUpdateWorkoutScreen(
                                             durationAll = durationAll.takeIf { it.isNotBlank() },
                                             lessons = lessons.filter { it.title.isNotBlank() }
                                         )
-                                        onSubmit(newWorkout, selectedImageUri)
+                                        val isLocalImage = selectedImageUri?.scheme == "content" || selectedImageUri?.scheme == "file"
+                                        val finalImageUri = if (isLocalImage) selectedImageUri else null
+
+                                        Log.d("WorkoutForm", "SelectedImageUri: $selectedImageUri, Scheme: ${selectedImageUri?.scheme}")
+                                        Log.d("WorkoutForm", "Image in workout object: ${workout?.picPath}")
+                                        Log.d("WorkoutForm", "Final Image URI sent to backend: $finalImageUri")
+
+                                        onSubmit(newWorkout, finalImageUri)
                                         navController.popBackStack()
                                     } finally {
                                         isLoading = false
@@ -984,17 +992,17 @@ fun LessonCard(
 
             Column {
                 OutlinedTextField(
-                    value = lesson.video_url,
-                    onValueChange = { onLessonChange(lesson.copy(video_url = it)) },
+                    value = lesson.videoUrl,
+                    onValueChange = { onLessonChange(lesson.copy(videoUrl = it)) },
                     label = { Text("Video URL *", color = Color.White.copy(alpha = 0.8f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    isError = showValidation && lesson.video_url.isBlank(),
+                    isError = showValidation && lesson.videoUrl.isBlank(),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.VideoLibrary,
                             contentDescription = null,
-                            tint = if (showValidation && lesson.video_url.isBlank()) Color.Red else Color.White,
+                            tint = if (showValidation && lesson.videoUrl.isBlank()) Color.Red else Color.White,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -1008,7 +1016,7 @@ fun LessonCard(
                     )
                 )
 
-                if (showValidation && lesson.video_url.isBlank()) {
+                if (showValidation && lesson.videoUrl.isBlank()) {
                     Text(
                         text = "Video URL is required",
                         color = Color.Red,
