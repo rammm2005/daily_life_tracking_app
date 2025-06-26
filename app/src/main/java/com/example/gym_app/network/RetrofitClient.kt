@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.1.8:8000/"
+    private const val BASE_URL = "https://malamute-winning-positively.ngrok-free.app/"
 //    192.168.1.14
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

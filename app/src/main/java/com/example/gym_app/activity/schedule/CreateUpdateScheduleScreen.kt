@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -58,6 +59,8 @@ fun CreateUpdateScheduleScreen(
     val context = LocalContext.current
     val reminderRepository = remember { ReminderRepository(context) }
     val coroutineScope = rememberCoroutineScope()
+    var isDeleting by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val mainColor = colorResource(id = R.color.mainColor)
 
     val bottomSheetState = rememberModalBottomSheetState(
@@ -172,7 +175,6 @@ fun CreateUpdateScheduleScreen(
                 dateTimeVal.isValid
     }
 
-
     LaunchedEffect(title) {
         if (showValidationErrors) {
             formValidation = formValidation.copy(titleValidation = validateTitle(title))
@@ -197,12 +199,24 @@ fun CreateUpdateScheduleScreen(
         }
     }
 
-    LaunchedEffect(startTime, endTime, isAllDay) {
+    LaunchedEffect(selectedDate, startTime, endTime, isAllDay) {
         schedule = if (isAllDay) {
             SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDate.time)
         } else {
+            val startDateTime = Calendar.getInstance().apply {
+                time = selectedDate.time
+                set(Calendar.HOUR_OF_DAY, startTime.get(Calendar.HOUR_OF_DAY))
+                set(Calendar.MINUTE, startTime.get(Calendar.MINUTE))
+            }
+
+            val endDateTime = Calendar.getInstance().apply {
+                time = selectedDate.time
+                set(Calendar.HOUR_OF_DAY, endTime.get(Calendar.HOUR_OF_DAY))
+                set(Calendar.MINUTE, endTime.get(Calendar.MINUTE))
+            }
+
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-            "${dateFormat.format(startTime.time)} - ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(endTime.time)}"
+            "${dateFormat.format(startDateTime.time)} - ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(endDateTime.time)}"
         }
 
         if (showValidationErrors) {
@@ -287,6 +301,7 @@ fun CreateUpdateScheduleScreen(
                 isAllDay = isAllDay,
                 onAllDayChange = { isAllDay = it },
                 isLoading = isLoading,
+                isDeleting = isDeleting,
                 mainColor = mainColor,
                 isUpdate = scheduleId != null,
                 formValidation = formValidation,
@@ -356,25 +371,142 @@ fun CreateUpdateScheduleScreen(
                 },
                 onDelete = scheduleId?.let { id ->
                     {
-                        coroutineScope.launch {
-                            try {
-                                reminderRepository.deleteReminder(id)
-                                snackbarHostState.showSnackbar(
-                                    message = "Reminder deleted successfully!",
-                                    duration = SnackbarDuration.Short
-                                )
-                                navController.navigateUp()
-                            } catch (e: Exception) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Failed to delete reminder",
-                                    duration = SnackbarDuration.Short
-                                )
-                            }
-                        }
+                        showDeleteDialog = true
                     }
                 }
             )
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteForever,
+                    contentDescription = "Delete Warning",
+                    tint = Color.Red,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Delete Reminder",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Are you sure you want to delete this reminder?",
+                        color = Color(0xFF374151),
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFFEF2F2)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = title,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF1F2937),
+                                fontSize = 14.sp
+                            )
+                            if (description.isNotEmpty()) {
+                                Text(
+                                    text = description,
+                                    color = Color(0xFF6B7280),
+                                    fontSize = 12.sp,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                            Text(
+                                text = schedule,
+                                color = Color(0xFF6B7280),
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "This action cannot be undone.",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            isDeleting = true
+                            showDeleteDialog = false
+                            try {
+                                scheduleId?.let { id ->
+                                    reminderRepository.deleteReminder(id)
+                                    snackbarHostState.showSnackbar(
+                                        message = "Reminder \"$title\" deleted successfully!",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    navController.navigateUp()
+                                }
+                            } catch (e: Exception) {
+                                Log.e("CreateUpdateScheduleScreen", "Error deleting reminder: ${e.message}")
+                                snackbarHostState.showSnackbar(
+                                    message = "Failed to delete reminder: ${e.message}",
+                                    duration = SnackbarDuration.Long
+                                )
+                            } finally {
+                                isDeleting = false
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ),
+                    enabled = !isDeleting
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = if (isDeleting) "Deleting..." else "Delete",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    enabled = !isDeleting
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
     }
 }
 
@@ -405,6 +537,7 @@ fun CreateScheduleBottomSheetContent(
     isAllDay: Boolean,
     onAllDayChange: (Boolean) -> Unit,
     isLoading: Boolean,
+    isDeleting: Boolean = false,
     mainColor: Color,
     isUpdate: Boolean,
     formValidation: FormValidation,
@@ -427,7 +560,10 @@ fun CreateScheduleBottomSheetContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onCancel) {
+                TextButton(
+                    onClick = onCancel,
+                    enabled = !isLoading && !isDeleting
+                ) {
                     Text("Cancel", color = Color.Gray)
                 }
 
@@ -440,7 +576,7 @@ fun CreateScheduleBottomSheetContent(
 
                 TextButton(
                     onClick = onSave,
-                    enabled = !isLoading
+                    enabled = !isLoading && !isDeleting
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -463,6 +599,7 @@ fun CreateScheduleBottomSheetContent(
                     label = { Text("Reminder Title *") },
                     placeholder = { Text("Add title") },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && !isDeleting,
                     isError = showValidationErrors && !formValidation.titleValidation.isValid,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (showValidationErrors && !formValidation.titleValidation.isValid)
@@ -507,7 +644,8 @@ fun CreateScheduleBottomSheetContent(
             TypeSelector(
                 selectedType = type,
                 onTypeChange = onTypeChange,
-                mainColor = mainColor
+                mainColor = mainColor,
+                enabled = !isLoading && !isDeleting
             )
         }
 
@@ -515,7 +653,8 @@ fun CreateScheduleBottomSheetContent(
             StatusSelector(
                 selectedStatus = selectedStatus,
                 onStatusChange = onStatusChange,
-                mainColor = mainColor
+                mainColor = mainColor,
+                enabled = !isLoading && !isDeleting
             )
         }
 
@@ -531,7 +670,8 @@ fun CreateScheduleBottomSheetContent(
                     isAllDay = isAllDay,
                     onAllDayChange = onAllDayChange,
                     mainColor = mainColor,
-                    hasError = showValidationErrors && !formValidation.timeValidation.isValid
+                    hasError = showValidationErrors && !formValidation.timeValidation.isValid,
+                    enabled = !isLoading && !isDeleting
                 )
 
                 if (showValidationErrors && !formValidation.timeValidation.isValid) {
@@ -570,7 +710,8 @@ fun CreateScheduleBottomSheetContent(
             RepeatSelector(
                 selectedRepeat = selectedRepeat,
                 onRepeatChange = onRepeatChange,
-                mainColor = mainColor
+                mainColor = mainColor,
+                enabled = !isLoading && !isDeleting
             )
         }
 
@@ -580,7 +721,8 @@ fun CreateScheduleBottomSheetContent(
                     selectedDays = selectedDays,
                     onDaysChange = onDaysChange,
                     mainColor = mainColor,
-                    hasError = showValidationErrors && !formValidation.daysValidation.isValid
+                    hasError = showValidationErrors && !formValidation.daysValidation.isValid,
+                    enabled = !isLoading && !isDeleting
                 )
 
                 if (showValidationErrors && !formValidation.daysValidation.isValid) {
@@ -600,7 +742,8 @@ fun CreateScheduleBottomSheetContent(
                     selectedMethods = selectedMethods,
                     onMethodsChange = onMethodsChange,
                     mainColor = mainColor,
-                    hasError = showValidationErrors && !formValidation.methodsValidation.isValid
+                    hasError = showValidationErrors && !formValidation.methodsValidation.isValid,
+                    enabled = !isLoading && !isDeleting
                 )
 
                 if (showValidationErrors && !formValidation.methodsValidation.isValid) {
@@ -623,6 +766,7 @@ fun CreateScheduleBottomSheetContent(
                     placeholder = { Text("Add description (optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
+                    enabled = !isLoading && !isDeleting,
                     isError = showValidationErrors && !formValidation.descriptionValidation.isValid,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (showValidationErrors && !formValidation.descriptionValidation.isValid)
@@ -665,20 +809,73 @@ fun CreateScheduleBottomSheetContent(
 
         if (isUpdate && onDelete != null) {
             item {
-                OutlinedButton(
-                    onClick = onDelete,
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.Red
-                    )
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFEF2F2)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Delete Reminder")
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Warning,
+                                contentDescription = "Warning",
+                                tint = Color(0xFFDC2626),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Danger Zone",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFFDC2626)
+                            )
+                        }
+
+                        Text(
+                            text = "Once you delete this reminder, there is no going back. Please be certain.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF6B7280),
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        OutlinedButton(
+                            onClick = onDelete,
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading && !isDeleting,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color.Red
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                Color.Red
+                            )
+                        ) {
+                            if (isDeleting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.Red
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Deleting...")
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.DeleteForever,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Delete Reminder")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -689,16 +886,18 @@ fun CreateScheduleBottomSheetContent(
     }
 }
 
+// Update all selector components to include enabled parameter
 @Composable
 fun StatusSelector(
     selectedStatus: String,
     onStatusChange: (String) -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     val statusOptions = listOf(
-        Triple("active", Icons.Outlined.PlayArrow, Color(0xFF10B981)), // Green
-        Triple("paused", Icons.Outlined.Pause, Color(0xFFF59E0B)),     // Orange
-        Triple("done", Icons.Outlined.CheckCircle, Color(0xFF6B7280))  // Gray
+        Triple("active", Icons.Outlined.PlayArrow, Color(0xFF10B981)),
+        Triple("paused", Icons.Outlined.Pause, Color(0xFFF59E0B)),
+        Triple("done", Icons.Outlined.CheckCircle, Color(0xFF6B7280))
     )
 
     Column {
@@ -706,7 +905,7 @@ fun StatusSelector(
             text = "Status",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF1F2937),
+            color = if (enabled) Color(0xFF1F2937) else Color(0xFF9CA3AF),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -718,8 +917,9 @@ fun StatusSelector(
                     status = status,
                     icon = icon,
                     isSelected = selectedStatus == status,
-                    onClick = { onStatusChange(status) },
-                    chipColor = color
+                    onClick = { if (enabled) onStatusChange(status) },
+                    chipColor = color,
+                    enabled = enabled
                 )
             }
         }
@@ -732,13 +932,22 @@ fun StatusChip(
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
-    chipColor: Color
+    chipColor: Color,
+    enabled: Boolean = true
 ) {
     Surface(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable(enabled = enabled) { onClick() },
         shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) chipColor else Color(0xFFF3F4F6),
-        contentColor = if (isSelected) Color.White else Color(0xFF6B7280)
+        color = when {
+            !enabled -> Color(0xFFF3F4F6)
+            isSelected -> chipColor
+            else -> Color(0xFFF3F4F6)
+        },
+        contentColor = when {
+            !enabled -> Color(0xFF9CA3AF)
+            isSelected -> Color.White
+            else -> Color(0xFF6B7280)
+        }
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -759,12 +968,12 @@ fun StatusChip(
     }
 }
 
-// New Repeat Selector Component
 @Composable
 fun RepeatSelector(
     selectedRepeat: String,
     onRepeatChange: (String) -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     val repeatOptions = listOf(
         "none" to Icons.Outlined.Block,
@@ -778,7 +987,7 @@ fun RepeatSelector(
             text = "Repeat",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF1F2937),
+            color = if (enabled) Color(0xFF1F2937) else Color(0xFF9CA3AF),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -790,8 +999,9 @@ fun RepeatSelector(
                     repeat = repeat,
                     icon = icon,
                     isSelected = selectedRepeat == repeat,
-                    onClick = { onRepeatChange(repeat) },
-                    mainColor = mainColor
+                    onClick = { if (enabled) onRepeatChange(repeat) },
+                    mainColor = mainColor,
+                    enabled = enabled
                 )
             }
         }
@@ -804,13 +1014,22 @@ fun RepeatChip(
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     Surface(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable(enabled = enabled) { onClick() },
         shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) mainColor else Color(0xFFF3F4F6),
-        contentColor = if (isSelected) Color.White else Color(0xFF6B7280)
+        color = when {
+            !enabled -> Color(0xFFF3F4F6)
+            isSelected -> mainColor
+            else -> Color(0xFFF3F4F6)
+        },
+        contentColor = when {
+            !enabled -> Color(0xFF9CA3AF)
+            isSelected -> Color.White
+            else -> Color(0xFF6B7280)
+        }
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -831,13 +1050,12 @@ fun RepeatChip(
     }
 }
 
-// Keep all existing components (TypeSelector, DaysSelector, etc.) with the same implementation...
-
 @Composable
 fun TypeSelector(
     selectedType: String,
     onTypeChange: (String) -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     val types = listOf(
         "Workout" to Icons.Outlined.FitnessCenter,
@@ -856,7 +1074,7 @@ fun TypeSelector(
             text = "Type",
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF1F2937),
+            color = if (enabled) Color(0xFF1F2937) else Color(0xFF9CA3AF),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -868,8 +1086,9 @@ fun TypeSelector(
                     type = type,
                     icon = icon,
                     isSelected = selectedType == type,
-                    onClick = { onTypeChange(type) },
-                    mainColor = mainColor
+                    onClick = { if (enabled) onTypeChange(type) },
+                    mainColor = mainColor,
+                    enabled = enabled
                 )
             }
         }
@@ -882,13 +1101,22 @@ fun TypeChip(
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     Surface(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable(enabled = enabled) { onClick() },
         shape = RoundedCornerShape(20.dp),
-        color = if (isSelected) mainColor else Color(0xFFF3F4F6),
-        contentColor = if (isSelected) Color.White else Color(0xFF6B7280)
+        color = when {
+            !enabled -> Color(0xFFF3F4F6)
+            isSelected -> mainColor
+            else -> Color(0xFFF3F4F6)
+        },
+        contentColor = when {
+            !enabled -> Color(0xFF9CA3AF)
+            isSelected -> Color.White
+            else -> Color(0xFF6B7280)
+        }
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -915,7 +1143,8 @@ fun DaysSelector(
     selectedDays: List<String>,
     onDaysChange: (List<String>) -> Unit,
     mainColor: Color,
-    hasError: Boolean = false
+    hasError: Boolean = false,
+    enabled: Boolean = true
 ) {
     val daysOfWeek = listOf(
         "Monday", "Tuesday", "Wednesday", "Thursday",
@@ -930,7 +1159,11 @@ fun DaysSelector(
                 text = "Days *",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (hasError) Color.Red else Color(0xFF1F2937),
+                color = when {
+                    !enabled -> Color(0xFF9CA3AF)
+                    hasError -> Color.Red
+                    else -> Color(0xFF1F2937)
+                },
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             if (hasError) {
@@ -953,24 +1186,32 @@ fun DaysSelector(
                 FilterChip(
                     selected = isSelected,
                     onClick = {
-                        val newDays = if (isSelected) {
-                            selectedDays - day
-                        } else {
-                            selectedDays + day
+                        if (enabled) {
+                            val newDays = if (isSelected) {
+                                selectedDays - day
+                            } else {
+                                selectedDays + day
+                            }
+                            onDaysChange(newDays)
                         }
-                        onDaysChange(newDays)
                     },
                     label = { Text(day.take(3), fontSize = 12.sp) },
-                    enabled = true,
+                    enabled = enabled,
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = if (hasError) Color.Red else mainColor,
                         selectedLabelColor = Color.White,
-                        containerColor = if (hasError) Color.Red.copy(alpha = 0.1f) else Color(0xFFF3F4F6)
+                        containerColor = when {
+                            !enabled -> Color(0xFFF3F4F6)
+                            hasError -> Color.Red.copy(alpha = 0.1f)
+                            else -> Color(0xFFF3F4F6)
+                        },
+                        disabledContainerColor = Color(0xFFF3F4F6),
+                        disabledLabelColor = Color(0xFF9CA3AF)
                     ),
                     border = FilterChipDefaults.filterChipBorder(
                         borderColor = if (hasError) Color.Red else Color.Transparent,
                         selectedBorderColor = if (hasError) Color.Red else mainColor,
-                        enabled = true,
+                        enabled = enabled,
                         selected = isSelected
                     )
                 )
@@ -984,7 +1225,8 @@ fun ReminderMethodsSelector(
     selectedMethods: List<String>,
     onMethodsChange: (List<String>) -> Unit,
     mainColor: Color,
-    hasError: Boolean = false
+    hasError: Boolean = false,
+    enabled: Boolean = true
 ) {
     val methods = listOf(
         "Push Notification" to Icons.Outlined.Notifications,
@@ -1000,7 +1242,11 @@ fun ReminderMethodsSelector(
                 text = "Reminder Methods *",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (hasError) Color.Red else Color(0xFF1F2937),
+                color = when {
+                    !enabled -> Color(0xFF9CA3AF)
+                    hasError -> Color.Red
+                    else -> Color(0xFF1F2937)
+                },
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             if (hasError) {
@@ -1023,15 +1269,18 @@ fun ReminderMethodsSelector(
                     icon = icon,
                     isSelected = selectedMethods.contains(method),
                     onClick = {
-                        val newMethods = if (selectedMethods.contains(method)) {
-                            selectedMethods - method
-                        } else {
-                            selectedMethods + method
+                        if (enabled) {
+                            val newMethods = if (selectedMethods.contains(method)) {
+                                selectedMethods - method
+                            } else {
+                                selectedMethods + method
+                            }
+                            onMethodsChange(newMethods)
                         }
-                        onMethodsChange(newMethods)
                     },
                     mainColor = if (hasError) Color.Red else mainColor,
-                    hasError = hasError
+                    hasError = hasError,
+                    enabled = enabled
                 )
             }
         }
@@ -1045,18 +1294,25 @@ fun MethodChip(
     isSelected: Boolean,
     onClick: () -> Unit,
     mainColor: Color,
-    hasError: Boolean = false
+    hasError: Boolean = false,
+    enabled: Boolean = true
 ) {
     Surface(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable(enabled = enabled) { onClick() },
         shape = RoundedCornerShape(20.dp),
         color = when {
+            !enabled -> Color(0xFFF3F4F6)
             isSelected -> mainColor
             hasError -> Color.Red.copy(alpha = 0.1f)
             else -> Color(0xFFF3F4F6)
         },
-        contentColor = if (isSelected) Color.White else Color(0xFF6B7280),
-        border = if (hasError && !isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color.Red) else null
+        contentColor = when {
+            !enabled -> Color(0xFF9CA3AF)
+            isSelected -> Color.White
+            else -> Color(0xFF6B7280)
+        },
+        border = if (hasError && !isSelected && enabled)
+            androidx.compose.foundation.BorderStroke(1.dp, Color.Red) else null
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -1089,7 +1345,8 @@ fun DateTimeSection(
     isAllDay: Boolean,
     onAllDayChange: (Boolean) -> Unit,
     mainColor: Color,
-    hasError: Boolean = false
+    hasError: Boolean = false,
+    enabled: Boolean = true
 ) {
     Column {
         Row(
@@ -1099,7 +1356,11 @@ fun DateTimeSection(
                 text = "Date & Time",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (hasError) Color.Red else Color(0xFF1F2937),
+                color = when {
+                    !enabled -> Color(0xFF9CA3AF)
+                    hasError -> Color.Red
+                    else -> Color(0xFF1F2937)
+                },
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             if (hasError) {
@@ -1120,10 +1381,15 @@ fun DateTimeSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("All Day", fontSize = 14.sp, color = Color(0xFF374151))
+            Text(
+                "All Day",
+                fontSize = 14.sp,
+                color = if (enabled) Color(0xFF374151) else Color(0xFF9CA3AF)
+            )
             Switch(
                 checked = isAllDay,
-                onCheckedChange = onAllDayChange,
+                onCheckedChange = { if (enabled) onAllDayChange(it) },
+                enabled = enabled,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = if (hasError) Color.Red else mainColor
                 )
@@ -1134,7 +1400,8 @@ fun DateTimeSection(
             label = "Date",
             date = selectedDate,
             onDateChange = onDateChange,
-            mainColor = if (hasError) Color.Red else mainColor
+            mainColor = if (hasError) Color.Red else mainColor,
+            enabled = enabled
         )
 
         if (!isAllDay) {
@@ -1142,14 +1409,16 @@ fun DateTimeSection(
                 label = "Start Time",
                 time = startTime,
                 onTimeChange = onStartTimeChange,
-                mainColor = if (hasError) Color.Red else mainColor
+                mainColor = if (hasError) Color.Red else mainColor,
+                enabled = enabled
             )
 
             TimePickerRow(
                 label = "End Time",
                 time = endTime,
                 onTimeChange = onEndTimeChange,
-                mainColor = if (hasError) Color.Red else mainColor
+                mainColor = if (hasError) Color.Red else mainColor,
+                enabled = enabled
             )
         }
     }
@@ -1160,28 +1429,31 @@ fun DatePickerRow(
     label: String,
     date: Calendar,
     onDateChange: (Calendar) -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                val datePickerDialog = DatePickerDialog(
-                    context,
-                    { _, year, month, dayOfMonth ->
-                        val newDate = Calendar.getInstance().apply {
-                            set(Calendar.YEAR, year)
-                            set(Calendar.MONTH, month)
-                            set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                        }
-                        onDateChange(newDate)
-                    },
-                    date.get(Calendar.YEAR),
-                    date.get(Calendar.MONTH),
-                    date.get(Calendar.DAY_OF_MONTH)
-                )
-                datePickerDialog.show()
+            .clickable(enabled = enabled) {
+                if (enabled) {
+                    val datePickerDialog = DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            val newDate = (date.clone() as Calendar).apply {
+                                set(Calendar.YEAR, year)
+                                set(Calendar.MONTH, month)
+                                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                            }
+                            onDateChange(newDate)
+                        },
+                        date.get(Calendar.YEAR),
+                        date.get(Calendar.MONTH),
+                        date.get(Calendar.DAY_OF_MONTH)
+                    )
+                    datePickerDialog.show()
+                }
             }
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1190,7 +1462,7 @@ fun DatePickerRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            color = Color(0xFF374151)
+            color = if (enabled) Color(0xFF374151) else Color(0xFF9CA3AF)
         )
 
         Row(
@@ -1199,14 +1471,14 @@ fun DatePickerRow(
             Text(
                 text = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault()).format(date.time),
                 fontSize = 14.sp,
-                color = mainColor,
+                color = if (enabled) mainColor else Color(0xFF9CA3AF),
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFF9CA3AF),
+                tint = if (enabled) Color(0xFF9CA3AF) else Color(0xFFD1D5DB),
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -1218,28 +1490,31 @@ fun TimePickerRow(
     label: String,
     time: Calendar,
     onTimeChange: (Calendar) -> Unit,
-    mainColor: Color
+    mainColor: Color,
+    enabled: Boolean = true
 ) {
     val context = LocalContext.current
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                val timePickerDialog = TimePickerDialog(
-                    context,
-                    { _, hourOfDay, minute ->
-                        val newTime = Calendar.getInstance().apply {
-                            set(Calendar.HOUR_OF_DAY, hourOfDay)
-                            set(Calendar.MINUTE, minute)
-                        }
-                        onTimeChange(newTime)
-                    },
-                    time.get(Calendar.HOUR_OF_DAY),
-                    time.get(Calendar.MINUTE),
-                    false
-                )
-                timePickerDialog.show()
+            .clickable(enabled = enabled) {
+                if (enabled) {
+                    val timePickerDialog = TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            val newTime = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, hourOfDay)
+                                set(Calendar.MINUTE, minute)
+                            }
+                            onTimeChange(newTime)
+                        },
+                        time.get(Calendar.HOUR_OF_DAY),
+                        time.get(Calendar.MINUTE),
+                        false
+                    )
+                    timePickerDialog.show()
+                }
             }
             .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1248,7 +1523,7 @@ fun TimePickerRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            color = Color(0xFF374151)
+            color = if (enabled) Color(0xFF374151) else Color(0xFF9CA3AF)
         )
 
         Row(
@@ -1257,14 +1532,14 @@ fun TimePickerRow(
             Text(
                 text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(time.time),
                 fontSize = 14.sp,
-                color = mainColor,
+                color = if (enabled) mainColor else Color(0xFF9CA3AF),
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFF9CA3AF),
+                tint = if (enabled) Color(0xFF9CA3AF) else Color(0xFFD1D5DB),
                 modifier = Modifier.size(16.dp)
             )
         }

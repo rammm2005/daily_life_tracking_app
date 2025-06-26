@@ -9,5 +9,7 @@ data class Reminder(
     val method: List<String>,
     val days: List<String>,
     val status: String, // 'active', 'paused', 'done'
-    val repeat: String  // 'none', 'daily', 'weekly', 'monthly'
+    val repeat: String, // 'none', 'daily', 'weekly', 'monthly'
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )

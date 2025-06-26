@@ -37,6 +37,7 @@ import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
 import com.example.gym_app.activity.meal.DetailMealScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
+import com.example.gym_app.activity.schedule.DetailSchedule
 import com.example.gym_app.activity.schedule.ScheduleScreen
 import com.example.gym_app.activity.workout.CreateUpdateWorkoutScreen
 import com.example.gym_app.activity.workout.WorkoutDetail
@@ -99,6 +100,11 @@ fun AppNavHost(sessionManager: SessionManager) {
             )
         }
 
+
+        composable("schedule_detail/{scheduleId}") { backStackEntry ->
+            val scheduleId = backStackEntry.arguments?.getString("scheduleId") ?: return@composable
+            DetailSchedule(navController = navController, scheduleId = scheduleId)
+        }
 
 
         composable("workout_screen") {

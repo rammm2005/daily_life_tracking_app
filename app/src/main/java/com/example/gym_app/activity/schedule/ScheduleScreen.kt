@@ -85,7 +85,7 @@ fun ScheduleScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            GoogleCalendarTopBar(
+            ModernTopBar(
                 selectedDate = selectedDate,
                 onDateChange = { selectedDate = it },
                 viewMode = viewMode,
@@ -99,55 +99,69 @@ fun ScheduleScreen(navController: NavController) {
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = { navController.navigate("create_schedule") },
                 containerColor = mainColor,
                 contentColor = Color.White,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.shadow(8.dp, RoundedCornerShape(16.dp))
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Event",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "New Event",
+                    fontWeight = FontWeight.Medium
                 )
             }
         },
-        containerColor = mainColor.copy(alpha = 0.05f)
+        containerColor = Color(0xFFF8FAFC)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(mainColor.copy(alpha = 0.05f))
+                .background(Color(0xFFF8FAFC))
         ) {
-            // Search bar
+            // Search bar with smooth animation
             AnimatedVisibility(
                 visible = showSearchBar,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut()
+                enter = slideInVertically(
+                    animationSpec = tween(300),
+                    initialOffsetY = { -it }
+                ) + fadeIn(animationSpec = tween(300)),
+                exit = slideOutVertically(
+                    animationSpec = tween(300),
+                    targetOffsetY = { -it }
+                ) + fadeOut(animationSpec = tween(300))
             ) {
-                SearchBar(
+                ModernSearchBar(
                     query = searchQuery,
                     onQueryChange = { searchQuery = it },
                     mainColor = mainColor
                 )
             }
 
-            CalendarHeader(
+            // Quick date navigation
+            QuickDateNavigation(
                 selectedDate = selectedDate,
                 onDateChange = { selectedDate = it },
                 mainColor = mainColor,
                 scheduleCount = filteredSchedules.size
             )
 
-            ViewModeTabs(
+            // Simplified view mode tabs
+            SimpleViewModeTabs(
                 selectedMode = viewMode,
                 onModeChange = { viewMode = it },
                 mainColor = mainColor
             )
 
+            // Content based on view mode
             when (viewMode) {
-                "Day" -> DayView(
+                "Day" -> ImprovedDayView(
                     schedules = filteredSchedules,
                     selectedDate = selectedDate,
                     navController = navController,
@@ -161,14 +175,14 @@ fun ScheduleScreen(navController: NavController) {
                         }
                     }
                 )
-                "Week" -> WeekView(
+                "Week" -> ImprovedWeekView(
                     schedules = filteredSchedules,
                     selectedDate = selectedDate,
                     navController = navController,
                     mainColor = mainColor,
                     isLoading = isLoading
                 )
-                "Month" -> MonthView(
+                "Month" -> ImprovedMonthView(
                     schedules = filteredSchedules,
                     selectedDate = selectedDate,
                     navController = navController,
@@ -181,7 +195,7 @@ fun ScheduleScreen(navController: NavController) {
 }
 
 @Composable
-fun SearchBar(
+fun ModernSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     mainColor: Color
@@ -191,17 +205,24 @@ fun SearchBar(
             .fillMaxWidth()
             .padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("Search schedules...") },
+            placeholder = {
+                Text(
+                    "Search your events...",
+                    color = Color(0xFF9CA3AF)
+                )
+            },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = mainColor
+                    tint = mainColor,
+                    modifier = Modifier.size(20.dp)
                 )
             },
             trailingIcon = {
@@ -210,7 +231,8 @@ fun SearchBar(
                         Icon(
                             imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
-                            tint = Color.Gray
+                            tint = Color(0xFF6B7280),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -220,16 +242,18 @@ fun SearchBar(
                 .padding(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = mainColor,
+                unfocusedBorderColor = Color.Transparent,
                 focusedLabelColor = mainColor
             ),
-            singleLine = true
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoogleCalendarTopBar(
+fun ModernTopBar(
     selectedDate: Calendar,
     onDateChange: (Calendar) -> Unit,
     viewMode: String,
@@ -243,54 +267,18 @@ fun GoogleCalendarTopBar(
 ) {
     TopAppBar(
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column {
                 Text(
-                    text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(selectedDate.time),
+                    text = "My Schedule",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = {
-                        val newDate = Calendar.getInstance().apply {
-                            time = selectedDate.time
-                            when (viewMode) {
-                                "Day" -> add(Calendar.DAY_OF_MONTH, -1)
-                                "Week" -> add(Calendar.WEEK_OF_YEAR, -1)
-                                "Month" -> add(Calendar.MONTH, -1)
-                            }
-                        }
-                        onDateChange(newDate)
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowLeft,
-                        contentDescription = "Previous",
-                        tint = Color.White
-                    )
-                }
-                IconButton(
-                    onClick = {
-                        val newDate = Calendar.getInstance().apply {
-                            time = selectedDate.time
-                            when (viewMode) {
-                                "Day" -> add(Calendar.DAY_OF_MONTH, 1)
-                                "Week" -> add(Calendar.WEEK_OF_YEAR, 1)
-                                "Month" -> add(Calendar.MONTH, 1)
-                            }
-                        }
-                        onDateChange(newDate)
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowRight,
-                        contentDescription = "Next",
-                        tint = Color.White
-                    )
-                }
+                Text(
+                    text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(selectedDate.time),
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
             }
         },
         navigationIcon = {
@@ -303,26 +291,25 @@ fun GoogleCalendarTopBar(
             }
         },
         actions = {
-            IconButton(onClick = {
-                onDateChange(Calendar.getInstance())
-            }) {
-                Icon(
-                    imageVector = Icons.Outlined.Today,
-                    contentDescription = "Today",
-                    tint = Color.White
+            // Today button
+            TextButton(
+                onClick = { onDateChange(Calendar.getInstance()) },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = "Today",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
                 )
             }
+
+            // Search toggle
             IconButton(onClick = onToggleSearch) {
                 Icon(
                     imageVector = if (showSearchBar) Icons.Default.SearchOff else Icons.Default.Search,
                     contentDescription = if (showSearchBar) "Hide Search" else "Search",
-                    tint = Color.White
-                )
-            }
-            IconButton(onClick = { /* More options */ }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More",
                     tint = Color.White
                 )
             }
@@ -334,7 +321,7 @@ fun GoogleCalendarTopBar(
 }
 
 @Composable
-fun CalendarHeader(
+fun QuickDateNavigation(
     selectedDate: Calendar,
     onDateChange: (Calendar) -> Unit,
     mainColor: Color,
@@ -345,51 +332,98 @@ fun CalendarHeader(
             .fillMaxWidth()
             .padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = SimpleDateFormat("EEEE", Locale.getDefault()).format(selectedDate.time),
-                        fontSize = 14.sp,
-                        color = mainColor,
-                        fontWeight = FontWeight.Medium
+            Column {
+                Text(
+                    text = SimpleDateFormat("EEEE", Locale.getDefault()).format(selectedDate.time),
+                    fontSize = 14.sp,
+                    color = mainColor,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = SimpleDateFormat("dd MMMM", Locale.getDefault()).format(selectedDate.time),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937)
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = null,
+                        tint = Color(0xFF6B7280),
+                        modifier = Modifier.size(16.dp)
                     )
-                    Text(
-                        text = SimpleDateFormat("dd MMMM", Locale.getDefault()).format(selectedDate.time),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
-                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "$scheduleCount ${if (scheduleCount == 1) "event" else "events"}",
-                        fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
+                        fontSize = 14.sp,
+                        color = Color(0xFF6B7280),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Date navigation buttons
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        val newDate = Calendar.getInstance().apply {
+                            time = selectedDate.time
+                            add(Calendar.DAY_OF_MONTH, -1)
+                        }
+                        onDateChange(newDate)
+                    },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            mainColor.copy(alpha = 0.1f),
+                            CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowLeft,
+                        contentDescription = "Previous Day",
+                        tint = mainColor,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Box(
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = {
+                        val newDate = Calendar.getInstance().apply {
+                            time = selectedDate.time
+                            add(Calendar.DAY_OF_MONTH, 1)
+                        }
+                        onDateChange(newDate)
+                    },
                     modifier = Modifier
-                        .size(48.dp)
-                        .background(mainColor.copy(alpha = 0.1f), CircleShape)
-                        .clickable {
-                            // Open date picker
-                            onDateChange(Calendar.getInstance())
-                        },
-                    contentAlignment = Alignment.Center
+                        .size(40.dp)
+                        .background(
+                            mainColor.copy(alpha = 0.1f),
+                            CircleShape
+                        )
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.CalendarToday,
-                        contentDescription = "Calendar",
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = "Next Day",
                         tint = mainColor,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -398,43 +432,59 @@ fun CalendarHeader(
 }
 
 @Composable
-fun ViewModeTabs(
+fun SimpleViewModeTabs(
     selectedMode: String,
     onModeChange: (String) -> Unit,
     mainColor: Color
 ) {
-    val modes = listOf("Day", "Week", "Month")
+    val modes = listOf(
+        "Day" to Icons.Outlined.Today,
+        "Week" to Icons.Outlined.DateRange,
+        "Month" to Icons.Outlined.CalendarMonth
+    )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
+                .padding(8.dp)
         ) {
-            modes.forEach { mode ->
+            modes.forEach { (mode, icon) ->
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(40.dp)
+                        .height(48.dp)
                         .background(
                             if (selectedMode == mode) mainColor else Color.Transparent,
-                            RoundedCornerShape(8.dp)
+                            RoundedCornerShape(12.dp)
                         )
                         .clickable { onModeChange(mode) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = mode,
-                        color = if (selectedMode == mode) Color.White else Color(0xFF6B7280),
-                        fontWeight = if (selectedMode == mode) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 14.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = mode,
+                            tint = if (selectedMode == mode) Color.White else Color(0xFF6B7280),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = mode,
+                            color = if (selectedMode == mode) Color.White else Color(0xFF6B7280),
+                            fontWeight = if (selectedMode == mode) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
         }
@@ -442,7 +492,7 @@ fun ViewModeTabs(
 }
 
 @Composable
-fun DayView(
+fun ImprovedDayView(
     schedules: List<Reminder>,
     selectedDate: Calendar,
     navController: NavController,
@@ -451,12 +501,20 @@ fun DayView(
     onRefresh: () -> Unit
 ) {
     if (isLoading) {
-        LoadingState(mainColor)
+        ModernLoadingState(mainColor)
         return
     }
 
     if (schedules.isEmpty()) {
-        EmptyDayState(navController, mainColor, onRefresh)
+        ModernEmptyState(
+            title = "No events today",
+            subtitle = "Create your first event to get started",
+            icon = Icons.Outlined.EventNote,
+            buttonText = "Create Event",
+            onButtonClick = { navController.navigate("create_schedule") },
+            onRefresh = onRefresh,
+            mainColor = mainColor
+        )
         return
     }
 
@@ -466,7 +524,7 @@ fun DayView(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(schedules) { schedule ->
-            ScheduleCard(
+            ModernScheduleCard(
                 schedule = schedule,
                 mainColor = mainColor,
                 onClick = {
@@ -477,11 +535,16 @@ fun DayView(
                 }
             )
         }
+
+        // Add some bottom padding for FAB
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
     }
 }
 
 @Composable
-fun ScheduleCard(
+fun ModernScheduleCard(
     schedule: Reminder,
     mainColor: Color,
     onClick: () -> Unit,
@@ -492,130 +555,124 @@ fun ScheduleCard(
             .fillMaxWidth()
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .background(
-                                    when (schedule.status) {
-                                        "active" -> Color(0xFF10B981)
-                                        "paused" -> Color(0xFFF59E0B)
-                                        "done" -> Color(0xFF6B7280)
-                                        else -> mainColor
-                                    },
-                                    CircleShape
-                                )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(
+                                when (schedule.status) {
+                                    "active" -> Color(0xFF10B981)
+                                    "paused" -> Color(0xFFF59E0B)
+                                    "done" -> Color(0xFF6B7280)
+                                    else -> mainColor
+                                },
+                                CircleShape
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
                         Text(
                             text = schedule.title,
-                            fontSize = 16.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
+
+                        Text(
+                            text = schedule.type,
+                            fontSize = 12.sp,
+                            color = mainColor,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .background(
+                                    mainColor.copy(alpha = 0.1f),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = schedule.type,
-                        fontSize = 12.sp,
-                        color = mainColor,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier
-                            .background(
-                                mainColor.copy(alpha = 0.1f),
-                                RoundedCornerShape(4.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
                 }
 
-                IconButton(onClick = onEdit) {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            Color(0xFFF3F4F6),
+                            CircleShape
+                        )
+                ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit",
                         tint = Color(0xFF6B7280),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
 
             if (schedule.description.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = schedule.description,
                     fontSize = 14.sp,
                     color = Color(0xFF6B7280),
-                    maxLines = 2,
+                    lineHeight = 20.sp,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Schedule,
-                        contentDescription = "Schedule",
-                        tint = Color(0xFF6B7280),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = schedule.schedule,
-                        fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
-                    )
-                }
+                InfoChip(
+                    icon = Icons.Outlined.Schedule,
+                    text = schedule.schedule,
+                    mainColor = mainColor
+                )
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Repeat,
-                        contentDescription = "Repeat",
-                        tint = Color(0xFF6B7280),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = schedule.repeat.replaceFirstChar { it.uppercase() },
-                        fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
-                    )
-                }
+                InfoChip(
+                    icon = Icons.Outlined.Repeat,
+                    text = schedule.repeat.replaceFirstChar { it.uppercase() },
+                    mainColor = mainColor
+                )
             }
 
             val gson = remember { Gson() }
+
             val parsedDays = remember(schedule.days) {
                 if (schedule.days.isNotEmpty()) {
                     try {
-                        gson.fromJson(
-                            schedule.days.first(),
-                            object : TypeToken<List<String>>() {}.type
-                        ) as List<String>
+                        val raw = schedule.days.first()
+
+                        val firstParse = gson.fromJson(raw, object : TypeToken<List<String>>() {}.type) as List<String>
+
+                        val firstItem = firstParse.firstOrNull()
+                        if (firstItem != null && firstItem.trim().startsWith("[") && firstItem.trim().endsWith("]")) {
+                            val cleaned = firstItem.replace("\\", "")
+                            gson.fromJson(cleaned, object : TypeToken<List<String>>() {}.type)
+                        } else {
+                            firstParse
+                        }
                     } catch (e: Exception) {
                         emptyList()
                     }
@@ -624,40 +681,28 @@ fun ScheduleCard(
                 }
             }
 
+
+
             if (parsedDays.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CalendarMonth,
-                            contentDescription = "Days",
-                            tint = Color(0xFF6B7280),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Active Days",
-                            fontSize = 12.sp,
-                            color = Color(0xFF6B7280),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+                Text(
+                    text = "Active Days",
+                    fontSize = 12.sp,
+                    color = Color(0xFF6B7280),
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
 
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(parsedDays) { day ->
-                            DayChip(
-                                day = day,
-                                mainColor = mainColor,
-                                isHighlighted = isToday(day)
-                            )
-                        }
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(parsedDays) { day ->
+                        ModernDayChip(
+                            day = day,
+                            mainColor = mainColor,
+                            isHighlighted = isToday(day)
+                        )
                     }
                 }
             }
@@ -665,60 +710,187 @@ fun ScheduleCard(
     }
 }
 
-
-fun isToday(day: String): Boolean {
-    val today = Calendar.getInstance()
-    val todayName = SimpleDateFormat("EEEE", Locale.getDefault()).format(today.time)
-    return todayName.equals(day, ignoreCase = true)
+@Composable
+fun InfoChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    mainColor: Color
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(
+                Color(0xFFF8FAFC),
+                RoundedCornerShape(8.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = mainColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = Color(0xFF374151),
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
-
 @Composable
-fun DayChip(
+fun ModernDayChip(
     day: String,
     mainColor: Color,
     isHighlighted: Boolean = false
 ) {
     val dayAbbr = day.take(3).uppercase()
-    val backgroundColor = when {
-        isHighlighted -> mainColor
-        else -> mainColor.copy(alpha = 0.08f)
-    }
-    val textColor = when {
-        isHighlighted -> Color.White
-        else -> mainColor
-    }
-    val borderColor = when {
-        isHighlighted -> mainColor
-        else -> mainColor.copy(alpha = 0.2f)
-    }
 
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp)
+            .background(
+                if (isHighlighted) mainColor else mainColor.copy(alpha = 0.1f),
+                RoundedCornerShape(8.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .animateContentSize(),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = dayAbbr,
             fontSize = 11.sp,
-            color = textColor,
-            fontWeight = FontWeight.SemiBold,
+            color = if (isHighlighted) Color.White else mainColor,
+            fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
         )
     }
 }
 
+@Composable
+fun ModernLoadingState(mainColor: Color) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator(
+                color = mainColor,
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Loading your events...",
+                color = Color(0xFF6B7280),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
 
 @Composable
-fun WeekView(
+fun ModernEmptyState(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    buttonText: String,
+    onButtonClick: () -> Unit,
+    onRefresh: () -> Unit,
+    mainColor: Color
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            // Icon with background
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(
+                        mainColor.copy(alpha = 0.1f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = mainColor,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937),
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = subtitle,
+                fontSize = 14.sp,
+                color = Color(0xFF6B7280),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Primary action button
+            Button(
+                onClick = onButtonClick,
+                colors = ButtonDefaults.buttonColors(containerColor = mainColor),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = buttonText,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Secondary refresh button
+            TextButton(onClick = onRefresh) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Refresh",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color(0xFF6B7280)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Refresh",
+                    color = Color(0xFF6B7280)
+                )
+            }
+        }
+    }
+}
+
+// Simplified Week and Month views for better UX
+@Composable
+fun ImprovedWeekView(
     schedules: List<Reminder>,
     selectedDate: Calendar,
     navController: NavController,
@@ -726,42 +898,104 @@ fun WeekView(
     isLoading: Boolean
 ) {
     if (isLoading) {
-        LoadingState(mainColor)
+        ModernLoadingState(mainColor)
         return
     }
 
-    Column {
-        WeekHeader(selectedDate, mainColor)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            SimpleWeekHeader(selectedDate, mainColor)
+        }
 
         if (schedules.isEmpty()) {
-            EmptyWeekState(navController, mainColor)
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(schedules) { schedule ->
-                    ScheduleCard(
-                        schedule = schedule,
-                        mainColor = mainColor,
-                        onClick = { navController.navigate("schedule_detail/${schedule._id}") },
-                        onEdit = { navController.navigate("edit_schedule/${schedule._id}") }
-                    )
-                }
+            item {
+                ModernEmptyState(
+                    title = "No events this week",
+                    subtitle = "Add events to see them here",
+                    icon = Icons.Outlined.EventNote,
+                    buttonText = "Create Event",
+                    onButtonClick = { navController.navigate("create_schedule") },
+                    onRefresh = { },
+                    mainColor = mainColor
+                )
             }
+        } else {
+            items(schedules) { schedule ->
+                ModernScheduleCard(
+                    schedule = schedule,
+                    mainColor = mainColor,
+                    onClick = { navController.navigate("schedule_detail/${schedule._id}") },
+                    onEdit = { navController.navigate("edit_schedule/${schedule._id}") }
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
 @Composable
-fun WeekHeader(selectedDate: Calendar, mainColor: Color) {
+fun ImprovedMonthView(
+    schedules: List<Reminder>,
+    selectedDate: Calendar,
+    navController: NavController,
+    mainColor: Color,
+    isLoading: Boolean
+) {
+    if (isLoading) {
+        ModernLoadingState(mainColor)
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            SimpleMonthGrid(selectedDate, schedules, mainColor)
+        }
+
+        if (schedules.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Events this month (${schedules.size})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+            }
+
+            items(schedules) { schedule ->
+                ModernScheduleCard(
+                    schedule = schedule,
+                    mainColor = mainColor,
+                    onClick = { navController.navigate("schedule_detail/${schedule._id}") },
+                    onEdit = { navController.navigate("edit_schedule/${schedule._id}") }
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+@Composable
+fun SimpleWeekHeader(selectedDate: Calendar, mainColor: Color) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -783,8 +1017,10 @@ fun WeekHeader(selectedDate: Calendar, mainColor: Color) {
                     Text(
                         text = SimpleDateFormat("EEE", Locale.getDefault()).format(dayDate.time),
                         fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
+                        color = Color(0xFF6B7280),
+                        fontWeight = FontWeight.Medium
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = dayDate.get(Calendar.DAY_OF_MONTH).toString(),
                         fontSize = 16.sp,
@@ -805,59 +1041,24 @@ fun WeekHeader(selectedDate: Calendar, mainColor: Color) {
 }
 
 @Composable
-fun MonthView(
-    schedules: List<Reminder>,
-    selectedDate: Calendar,
-    navController: NavController,
-    mainColor: Color,
-    isLoading: Boolean
-) {
-    if (isLoading) {
-        LoadingState(mainColor)
-        return
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            MonthGrid(selectedDate, schedules, mainColor)
-        }
-
-        if (schedules.isNotEmpty()) {
-            item {
-                Text(
-                    text = "Events this month",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-
-            items(schedules) { schedule ->
-                ScheduleCard(
-                    schedule = schedule,
-                    mainColor = mainColor,
-                    onClick = { navController.navigate("schedule_detail/${schedule._id}") },
-                    onEdit = { navController.navigate("edit_schedule/${schedule._id}") }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun MonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) {
+fun SimpleMonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Month header
+            Text(
+                text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(selectedDate.time),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1F2937),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
+            // Days of week header
             Row(modifier = Modifier.fillMaxWidth()) {
                 listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
                     Text(
@@ -873,6 +1074,7 @@ fun MonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) 
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Calendar grid (simplified)
             val firstDayOfMonth = Calendar.getInstance().apply {
                 time = selectedDate.time
                 set(Calendar.DAY_OF_MONTH, 1)
@@ -880,8 +1082,6 @@ fun MonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) 
 
             val daysInMonth = firstDayOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH)
             val startDayOfWeek = firstDayOfMonth.get(Calendar.DAY_OF_WEEK) - 1
-
-            val totalCells = 42 // 6 weeks * 7 days
 
             repeat(6) { week ->
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -901,7 +1101,7 @@ fun MonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) 
                             events.any { isScheduleOnDate(it, date) }
                         } ?: false
 
-                        MonthDayCell(
+                        SimpleMonthDayCell(
                             dayNumber = if (isCurrentMonth) dayNumber else 0,
                             isCurrentMonth = isCurrentMonth,
                             isToday = dayDate?.let { isToday(it) } ?: false,
@@ -917,7 +1117,7 @@ fun MonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: Color) 
 }
 
 @Composable
-fun MonthDayCell(
+fun SimpleMonthDayCell(
     dayNumber: Int,
     isCurrentMonth: Boolean,
     isToday: Boolean,
@@ -932,8 +1132,7 @@ fun MonthDayCell(
             .background(
                 if (isToday) mainColor else Color.Transparent,
                 RoundedCornerShape(8.dp)
-            )
-            .clickable { /* Select day */ },
+            ),
         contentAlignment = Alignment.Center
     ) {
         if (isCurrentMonth && dayNumber > 0) {
@@ -966,117 +1165,13 @@ fun MonthDayCell(
     }
 }
 
-@Composable
-fun LoadingState(mainColor: Color) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            CircularProgressIndicator(
-                color = mainColor,
-                strokeWidth = 3.dp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Loading schedules...",
-                color = Color(0xFF6B7280),
-                fontSize = 14.sp
-            )
-        }
-    }
+// Helper functions remain the same
+fun isToday(day: String): Boolean {
+    val today = Calendar.getInstance()
+    val todayName = SimpleDateFormat("EEEE", Locale.getDefault()).format(today.time)
+    return todayName.equals(day, ignoreCase = true)
 }
 
-@Composable
-fun EmptyDayState(navController: NavController, mainColor: Color, onRefresh: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.EventNote,
-                contentDescription = null,
-                tint = Color(0xFF9CA3AF),
-                modifier = Modifier.size(64.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "No events today",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF1F2937)
-            )
-
-            Text(
-                text = "Tap + to create an event",
-                fontSize = 14.sp,
-                color = Color(0xFF6B7280),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = onRefresh,
-                colors = ButtonDefaults.buttonColors(containerColor = mainColor)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Refresh",
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Refresh")
-            }
-        }
-    }
-}
-
-@Composable
-fun EmptyWeekState(navController: NavController, mainColor: Color) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.EventNote,
-                contentDescription = null,
-                tint = Color(0xFF9CA3AF),
-                modifier = Modifier.size(64.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "No events this week",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF1F2937)
-            )
-
-            Text(
-                text = "Tap + to create an event",
-                fontSize = 14.sp,
-                color = Color(0xFF6B7280),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-    }
-}
-
-// Helper functions
 private fun isToday(date: Calendar): Boolean {
     val today = Calendar.getInstance()
     return date.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
