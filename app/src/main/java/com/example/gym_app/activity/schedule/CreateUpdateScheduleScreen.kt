@@ -72,8 +72,11 @@ fun CreateUpdateScheduleScreen(
     var description by remember { mutableStateOf("") }
     var type by remember { mutableStateOf("Workout") }
     var schedule by remember { mutableStateOf("") }
-    var selectedMethods by remember { mutableStateOf<List<String>>(listOf("Push Notification")) }
-    var selectedDays by remember { mutableStateOf<List<String>>(emptyList()) }
+//    var selectedMethods by remember { mutableStateOf<List<String>>(listOf("Push Notification")) }
+//    var selectedDays by remember { mutableStateOf<List<String>>(emptyList()) }
+    var selectedMethods = remember { mutableStateListOf<String>() }
+    var selectedDays = remember { mutableStateListOf<String>() }
+
     var selectedStatus by remember { mutableStateOf("active") }
     var selectedRepeat by remember { mutableStateOf("none") }
     var isLoading by remember { mutableStateOf(false) }
@@ -175,6 +178,11 @@ fun CreateUpdateScheduleScreen(
                 dateTimeVal.isValid
     }
 
+
+    LaunchedEffect(selectedDate) {
+        Log.d("DateCheck", "Selected date updated: ${selectedDate.time}")
+    }
+
     LaunchedEffect(title) {
         if (showValidationErrors) {
             formValidation = formValidation.copy(titleValidation = validateTitle(title))
@@ -234,13 +242,68 @@ fun CreateUpdateScheduleScreen(
                 description = it.description
                 type = it.type
                 schedule = it.schedule
-                selectedMethods = it.method
-                selectedDays = it.days
+                selectedMethods.clear()
+                selectedMethods.addAll(it.method)
+                selectedDays.clear()
+                selectedDays.addAll(it.days)
                 selectedStatus = it.status
                 selectedRepeat = it.repeat
+
+                val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val sdfDateTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+                try {
+                    val isAllDaySchedule = !it.schedule.contains(" - ")
+                    isAllDay = isAllDaySchedule
+
+                    if (isAllDaySchedule) {
+                        val parsedDate = sdfDate.parse(it.schedule)
+                        parsedDate?.let { date ->
+                            selectedDate = Calendar.getInstance().apply {
+                                time = date
+                            }
+                        }
+                    } else {
+                        val parts = it.schedule.split(" - ")
+                        val startStr = parts[0].trim()
+                        val endStr = parts[1].trim()
+
+                        val start = sdfDateTime.parse(startStr)
+                        val end = sdfTime.parse(endStr)
+
+                        start?.let { startDate ->
+                            val startCal = Calendar.getInstance().apply {
+                                time = startDate
+                            }
+                            selectedDate = Calendar.getInstance().apply {
+                                set(Calendar.YEAR, startCal.get(Calendar.YEAR))
+                                set(Calendar.MONTH, startCal.get(Calendar.MONTH))
+                                set(Calendar.DAY_OF_MONTH, startCal.get(Calendar.DAY_OF_MONTH))
+                            }
+                            startTime = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, startCal.get(Calendar.HOUR_OF_DAY))
+                                set(Calendar.MINUTE, startCal.get(Calendar.MINUTE))
+                            }
+                        }
+
+                        end?.let { endDate ->
+                            val endCal = Calendar.getInstance().apply {
+                                time = endDate
+                            }
+                            endTime = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, endCal.get(Calendar.HOUR_OF_DAY))
+                                set(Calendar.MINUTE, endCal.get(Calendar.MINUTE))
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("EditReminder", "Failed to parse schedule: ${it.schedule}", e)
+                }
             }
         }
     }
+
 
     Box(
         modifier = Modifier
@@ -285,9 +348,16 @@ fun CreateUpdateScheduleScreen(
                 onTypeChange = { type = it },
                 schedule = schedule,
                 selectedMethods = selectedMethods,
-                onMethodsChange = { selectedMethods = it },
+                onMethodsChange = {
+                    selectedMethods.clear()
+                    selectedMethods.addAll(it)
+                },
+
                 selectedDays = selectedDays,
-                onDaysChange = { selectedDays = it },
+                onDaysChange = {
+                    selectedDays.clear()
+                    selectedDays.addAll(it)
+                },
                 selectedStatus = selectedStatus,
                 onStatusChange = { selectedStatus = it },
                 selectedRepeat = selectedRepeat,
@@ -886,7 +956,6 @@ fun CreateScheduleBottomSheetContent(
     }
 }
 
-// Update all selector components to include enabled parameter
 @Composable
 fun StatusSelector(
     selectedStatus: String,
@@ -1433,6 +1502,7 @@ fun DatePickerRow(
     enabled: Boolean = true
 ) {
     val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1441,10 +1511,12 @@ fun DatePickerRow(
                     val datePickerDialog = DatePickerDialog(
                         context,
                         { _, year, month, dayOfMonth ->
-                            val newDate = (date.clone() as Calendar).apply {
-                                set(Calendar.YEAR, year)
-                                set(Calendar.MONTH, month)
-                                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                            val hour = date.get(Calendar.HOUR_OF_DAY)
+                            val minute = date.get(Calendar.MINUTE)
+
+                            val newDate = Calendar.getInstance().apply {
+                                clear()
+                                set(year, month, dayOfMonth, hour, minute)
                             }
                             onDateChange(newDate)
                         },

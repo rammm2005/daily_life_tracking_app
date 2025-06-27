@@ -1,5 +1,7 @@
 package com.example.gym_app.network
 
+import com.example.gym_app.model.DailyTracker
+import com.example.gym_app.model.Goal
 import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Reminder
 import com.example.gym_app.model.Tip
@@ -191,8 +193,8 @@ interface ApiService {
         @Field("title") title: String,
         @Field("schedule") schedule: String,
         @Field("description") description: String,
-        @Field("method") method: String,
-        @Field("days") days: String,
+        @Field("method") method: List<String>,
+        @Field("days") days: List<String>,
         @Field("status") status: String,
         @Field("repeat") repeat: String
     ): Response<ReminderResponse>
@@ -205,8 +207,8 @@ interface ApiService {
         @Field("title") title: String,
         @Field("schedule") schedule: String,
         @Field("description") description: String,
-        @Field("method") method: String,
-        @Field("days") days: String,
+        @Field("method") method: List<String>,
+        @Field("days") days: List<String>,
         @Field("status") status: String,
         @Field("repeat") repeat: String
     ): Response<ReminderResponse>
@@ -216,6 +218,71 @@ interface ApiService {
     suspend fun deleteReminder(
         @Path("id") id: String
     ): Response<ApiResponse>
+
+
+
+    // ---------- GOAL API ----------
+    @GET("api/goals/user/{userId}")
+    suspend fun getGoalsByUserId(
+        @Path("userId") userId: String
+    ): Response<GoalListResponse>
+
+    @GET("api/goals/{id}")
+    suspend fun getGoalById(
+        @Path("id") id: String
+    ): Response<GoalResponse>
+
+    @FormUrlEncoded
+    @POST("api/goals")
+    suspend fun createGoal(
+        @Field("title") title: String,
+        @Field("userId") userId: String,
+        @Field("type") type: String,
+        @Field("targetValue") targetValue: Double?,
+        @Field("unit") unit: String?,
+        @Field("category") category: String,
+        @Field("startDate") startDate: String,
+        @Field("endDate") endDate: String?
+    ): Response<GoalResponse>
+
+    @FormUrlEncoded
+    @PUT("api/goals/{id}")
+    suspend fun updateGoal(
+        @Path("id") id: String,
+        @Field("userId") userId: String,
+        @Field("title") title: String,
+        @Field("type") type: String,
+        @Field("targetValue") targetValue: Double?,
+        @Field("unit") unit: String?,
+        @Field("category") category: String,
+        @Field("startDate") startDate: String,
+        @Field("endDate") endDate: String?
+    ): Response<GoalResponse>
+
+    @DELETE("api/goals/{id}")
+    suspend fun deleteGoal(
+        @Path("id") id: String
+    ): Response<ApiResponse>
+
+
+    // ---------- DAILY TRACKER API ----------
+
+    @GET("api/tracker/user/{userId}")
+    suspend fun getTrackerByUserId(
+        @Path("userId") userId: String
+    ): Response<DailyTrackerListResponse>
+
+    @GET("api/tracker/{id}")
+    suspend fun getTrackerById(
+        @Path("id") id: String
+    ): Response<DailyTrackerResponse>
+
+    @FormUrlEncoded
+    @POST("api/tracker")
+    suspend fun createDailyTracker(
+        @Body tracker: DailyTracker
+    ): Response<DailyTrackerResponse>
+
 }
 
 // ---------- AUTH ----------
@@ -292,3 +359,28 @@ data class ReminderListResponse(
     val data: List<Reminder>
 )
 
+// ---------- GOAL ----------
+
+data class GoalResponse(
+    val success: Boolean,
+    val data: Goal
+)
+
+data class GoalListResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: List<Goal>
+)
+
+// ---------- DailyTracker ----------
+
+data class DailyTrackerResponse(
+    val success: Boolean,
+    val data: DailyTracker
+)
+
+data class DailyTrackerListResponse(
+    val success: Boolean,
+    val message: String?,
+    val data: List<DailyTracker>
+)

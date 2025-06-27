@@ -52,17 +52,14 @@ class ReminderRepository(private val context: Context) {
             val email = sessionManager.userEmail.first() ?: return null
             val userId = userRepository.getUserIdByEmail(email) ?: return null
 
-            val methodStr = Gson().toJson(reminder.method)
-            val daysStr = Gson().toJson(reminder.days)
-
             val response = api.createReminder(
                 userId = userId,
                 type = reminder.type,
                 title = reminder.title,
                 schedule = reminder.schedule,
                 description = reminder.description,
-                method = methodStr,
-                days = daysStr,
+                method = reminder.method,
+                days = reminder.days,
                 status = reminder.status,
                 repeat = reminder.repeat
             )
@@ -79,19 +76,17 @@ class ReminderRepository(private val context: Context) {
         }
     }
 
+
     suspend fun updateReminder(id: String, reminder: Reminder): Reminder? {
         return try {
-            val methodStr = Gson().toJson(reminder.method)
-            val daysStr = Gson().toJson(reminder.days)
-
             val response = api.updateReminder(
                 id = id,
                 type = reminder.type,
                 title = reminder.title,
                 schedule = reminder.schedule,
                 description = reminder.description,
-                method = methodStr,
-                days = daysStr,
+                method = reminder.method,
+                days = reminder.days,
                 status = reminder.status,
                 repeat = reminder.repeat
             )
@@ -107,6 +102,7 @@ class ReminderRepository(private val context: Context) {
             null
         }
     }
+
 
     suspend fun deleteReminder(id: String): Boolean {
         return try {

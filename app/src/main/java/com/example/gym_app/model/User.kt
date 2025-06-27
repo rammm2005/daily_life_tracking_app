@@ -19,9 +19,4 @@ data class User(
     val isBlocked: Boolean = false
 )
 
-data class Goal(
-    val type: String,
-    val targetWeight: Int,
-    val startDate: String?,
-    val endDate: String?
-)
+
