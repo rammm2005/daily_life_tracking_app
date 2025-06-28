@@ -8,8 +8,7 @@ import java.net.UnknownHostException
 
 object MongoDBConnection {
 
-//    private const val CONNECTION_STRING = "mongodb+srv://ditarama985:RamaGantengBangetBro123@cluster0.bupu03i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    private const val CONNECTION_STRING = "mongodb://ditarama985:RamaGantengBangetBro123@cluster0-shard-00-00.bupu03i.mongodb.net:27017,cluster0-shard-00-01.bupu03i.mongodb.net:27017,cluster0-shard-00-02.bupu03i.mongodb.net:27017/?ssl=true&replicaSet=atlas-abcdef-shard-0&authSource=admin&retryWrites=true&w=majority"
+    private const val CONNECTION_STRING = "mongodb://"
 
     private var mongoClient: MongoClient? = null
 
