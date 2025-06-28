@@ -57,6 +57,7 @@ class GoalRepository(private val context: Context) {
                 userId= userId,
                 targetValue = goal.targetValue,
                 unit = goal.unit,
+                isActive= goal.isActive,
                 category = goal.category,
                 startDate = goal.startDate,
                 endDate = goal.endDate
@@ -84,6 +85,7 @@ class GoalRepository(private val context: Context) {
                 title = goal.title,
                 type = goal.type,
                 targetValue = goal.targetValue,
+                isActive = goal.isActive,
                 unit = goal.unit,
                 category = goal.category,
                 startDate = goal.startDate,

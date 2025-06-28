@@ -242,6 +242,7 @@ interface ApiService {
         @Field("unit") unit: String?,
         @Field("category") category: String,
         @Field("startDate") startDate: String,
+        @Field("isActive") isActive: Boolean,
         @Field("endDate") endDate: String?
     ): Response<GoalResponse>
 
@@ -256,6 +257,7 @@ interface ApiService {
         @Field("unit") unit: String?,
         @Field("category") category: String,
         @Field("startDate") startDate: String,
+        @Field("isActive") isActive: Boolean,
         @Field("endDate") endDate: String?
     ): Response<GoalResponse>
 

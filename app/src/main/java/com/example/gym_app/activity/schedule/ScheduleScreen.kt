@@ -54,7 +54,6 @@ fun ScheduleScreen(navController: NavController) {
 
     val mainColor = colorResource(id = R.color.mainColor)
 
-    // Load schedules
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             isLoading = true
@@ -63,7 +62,6 @@ fun ScheduleScreen(navController: NavController) {
         }
     }
 
-    // Filter schedules based on search query and selected date
     val filteredSchedules = remember(schedules, searchQuery, selectedDate, viewMode) {
         schedules.filter { schedule ->
             val matchesSearch = if (searchQuery.isBlank()) true else {
@@ -125,7 +123,6 @@ fun ScheduleScreen(navController: NavController) {
                 .padding(padding)
                 .background(Color(0xFFF8FAFC))
         ) {
-            // Search bar with smooth animation
             AnimatedVisibility(
                 visible = showSearchBar,
                 enter = slideInVertically(
@@ -1165,7 +1162,6 @@ fun SimpleMonthDayCell(
     }
 }
 
-// Helper functions remain the same
 fun isToday(day: String): Boolean {
     val today = Calendar.getInstance()
     val todayName = SimpleDateFormat("EEEE", Locale.getDefault()).format(today.time)

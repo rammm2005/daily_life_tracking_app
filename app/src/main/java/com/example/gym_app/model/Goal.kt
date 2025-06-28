@@ -1,7 +1,7 @@
 package com.example.gym_app.model
 
 data class Goal(
-    val id: String? = null,
+    val _id: String? = null,
 //    val userId: String,
     val title: String,
     val type: String, // DAILY, WEEKLY, CUSTOM

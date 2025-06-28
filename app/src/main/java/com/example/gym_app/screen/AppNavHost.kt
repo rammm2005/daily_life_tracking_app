@@ -35,6 +35,7 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
+import com.example.gym_app.activity.goal.GoalScreen
 import com.example.gym_app.activity.meal.DetailMealScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
 import com.example.gym_app.activity.schedule.DetailSchedule
@@ -65,6 +66,11 @@ fun AppNavHost(sessionManager: SessionManager) {
                         workouts = workouts,
                         navController = navController  )
                 }
+        }
+
+
+        composable("goal_screen") {
+            GoalScreen(navController)
         }
 
 
