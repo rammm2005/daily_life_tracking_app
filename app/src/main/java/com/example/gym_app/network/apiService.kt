@@ -270,20 +270,20 @@ interface ApiService {
     // ---------- DAILY TRACKER API ----------
 
     @GET("api/tracker/user/{userId}")
-    suspend fun getTrackerByUserId(
-        @Path("userId") userId: String
-    ): Response<DailyTrackerListResponse>
+    suspend fun getDailyTrackersByUserId(@Path("userId") userId: String): Response<DailyTrackerListResponse>
 
     @GET("api/tracker/{id}")
-    suspend fun getTrackerById(
-        @Path("id") id: String
-    ): Response<DailyTrackerResponse>
+    suspend fun getDailyTrackerById(@Path("id") id: String): Response<DailyTrackerResponse>
 
-    @FormUrlEncoded
     @POST("api/tracker")
-    suspend fun createDailyTracker(
-        @Body tracker: DailyTracker
-    ): Response<DailyTrackerResponse>
+    suspend fun createDailyTracker(@Body tracker: DailyTracker): Response<DailyTrackerResponse>
+
+    @PUT("api/tracker/{id}")
+    suspend fun updateDailyTracker(@Path("id") id: String, @Body tracker: DailyTracker): Response<DailyTrackerResponse>
+
+    @DELETE("api/tracker/{id}")
+    suspend fun deleteDailyTracker(@Path("id") id: String): Response<DailyTrackerResponse>
+
 
 }
 

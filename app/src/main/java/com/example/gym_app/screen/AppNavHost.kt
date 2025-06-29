@@ -35,6 +35,8 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
+import com.example.gym_app.activity.dailytracking.CreateUpdateDailyTrackingScreen
+import com.example.gym_app.activity.dailytracking.DailyTrackingScreen
 import com.example.gym_app.activity.goal.GoalScreen
 import com.example.gym_app.activity.meal.DetailMealScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
@@ -74,6 +76,24 @@ fun AppNavHost(sessionManager: SessionManager) {
         }
 
 
+        composable("progress_screen") {
+            DailyTrackingScreen(navController)
+        }
+
+        composable("createUpdateDailyTracking") {
+            CreateUpdateDailyTrackingScreen(
+                navController = navController
+            )
+        }
+
+        composable("createUpdateDailyTracking/{trackerId}") { backStackEntry ->
+            val trackerId = backStackEntry.arguments?.getString("trackerId")
+
+            CreateUpdateDailyTrackingScreen(
+                navController = navController,
+                trackerId = trackerId,
+            )
+        }
 
         composable("schedule_screen") {
             ScheduleScreen(navController)

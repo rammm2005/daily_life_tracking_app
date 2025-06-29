@@ -1046,7 +1046,6 @@ fun SimpleMonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: C
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Month header
             Text(
                 text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(selectedDate.time),
                 fontSize = 18.sp,
@@ -1055,7 +1054,6 @@ fun SimpleMonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: C
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Days of week header
             Row(modifier = Modifier.fillMaxWidth()) {
                 listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
                     Text(
@@ -1071,7 +1069,6 @@ fun SimpleMonthGrid(selectedDate: Calendar, events: List<Reminder>, mainColor: C
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Calendar grid (simplified)
             val firstDayOfMonth = Calendar.getInstance().apply {
                 time = selectedDate.time
                 set(Calendar.DAY_OF_MONTH, 1)
