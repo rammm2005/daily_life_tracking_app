@@ -4,6 +4,7 @@ import com.example.gym_app.model.ChatSession
 import com.example.gym_app.model.DailyTracker
 import com.example.gym_app.model.Goal
 import com.example.gym_app.model.Meal
+import com.example.gym_app.model.Message
 import com.example.gym_app.model.Reminder
 import com.example.gym_app.model.Tip
 import com.example.gym_app.model.User
@@ -295,8 +296,10 @@ interface ApiService {
     suspend fun deleteMessages(@Body request: DeleteMessagesRequest): Response<DeleteMessagesResponse>
 
     @GET("api/chatbot/chat/sessions/{userId}")
-    suspend fun getChatSessions(@Path("userId") userId: String): Response<List<ChatSession>>
+    suspend fun getChatSessions(@Path("userId") userId: String): Response<ChatSessionsResponse>
 
+    @GET("api/chatbot/chat/session/{sessionId}/messages")
+    suspend fun getMessagesBySessionId(@Path("sessionId") sessionId: String): Response<SessionMessagesResponse>
 }
 
 // ---------- AUTH ----------
@@ -417,4 +420,13 @@ data class DeleteMessagesRequest(
 data class DeleteMessagesResponse(
     val message: String,
     val deletedCount: Int
+)
+
+data class SessionMessagesResponse(
+    val messages: List<Message>
+)
+
+data class ChatSessionsResponse(
+    val success: Boolean,
+    val data: List<ChatSession>
 )

@@ -4,6 +4,7 @@ import SessionManager
 import android.content.Context
 import android.util.Log
 import com.example.gym_app.model.ChatSession
+import com.example.gym_app.model.Message
 import com.example.gym_app.network.ApiService
 import com.example.gym_app.network.ChatRequest
 import com.example.gym_app.network.DeleteMessagesRequest
@@ -42,7 +43,7 @@ class ChatRepository(private val context: Context) {
 
             val response = api.getChatSessions(userId)
             if (response.isSuccessful) {
-                response.body() ?: emptyList()
+                response.body()?.data ?: emptyList()
             } else {
                 Log.e("ChatRepository", "Gagal ambil sesi: ${response.code()}")
                 emptyList()
@@ -52,6 +53,20 @@ class ChatRepository(private val context: Context) {
             emptyList()
         }
     }
+
+    suspend fun getMessagesBySessionId(sessionId: String): List<Message> {
+        return try {
+            val response = api.getMessagesBySessionId(sessionId)
+            if (response.isSuccessful) {
+                response.body()?.messages ?: emptyList()
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 
     suspend fun sendMessage(message: String): Pair<String?, List<String>> {
         return try {

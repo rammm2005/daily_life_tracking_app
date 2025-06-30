@@ -74,7 +74,7 @@ fun AppNavHost(sessionManager: SessionManager) {
 
 
         composable("chat_screen") {
-            ChatBotScreen()
+            ChatBotScreen(navController)
         }
 
         composable("goal_screen") {
