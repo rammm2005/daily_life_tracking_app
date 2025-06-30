@@ -10,19 +10,44 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gym_app.R
+import com.example.gym_app.model.DailyData
+import com.example.gym_app.model.DailyTracker
+import com.example.gym_app.repository.DailyTrackerRepository
+
 
 @Composable
-
 fun MonitoringSection() {
+    val context = LocalContext.current
+    val repo = remember { DailyTrackerRepository(context) }
+
+    var totalCalories by remember { mutableStateOf(String()) }
+    var totalSleep by remember { mutableStateOf(0) }
+    var totalWorkout by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        val summary = repo.getDailySummary()
+        summary?.let {
+            totalCalories = it.totalCalories
+            totalSleep = it.totalSleep
+            totalWorkout = it.totalWorkout
+        }
+    }
+
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = "Daily Monitoring",
@@ -32,15 +57,18 @@ fun MonitoringSection() {
             modifier = Modifier.padding(start = 16.dp)
         )
         Spacer(Modifier.height(16.dp))
-        Row(modifier = Modifier.fillMaxWidth().padding(16.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-            MonitoringItem(R.drawable.monitor1, "2500", "Daily Calories")
-            MonitoringItem(R.drawable.monitor2, "6h 45min", "Sleep")
-            MonitoringItem(R.drawable.monitor3, "5w 8days", "Total Workout")
+        ) {
+            MonitoringItem(R.drawable.monitor1, "$totalCalories", "Daily Calories")
+            MonitoringItem(R.drawable.monitor2, "${totalSleep}h", "Sleep")
+            MonitoringItem(R.drawable.monitor3, "${totalWorkout}x", "Total Workout")
         }
     }
 }
+
+
 
 @Composable
 fun MonitoringItem(icon: Int,value: String, label: String ) {

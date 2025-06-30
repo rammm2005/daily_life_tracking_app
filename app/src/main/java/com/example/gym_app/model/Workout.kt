@@ -1,6 +1,5 @@
 package com.example.gym_app.model
 
-import org.bson.types.ObjectId
 import java.io.Serializable
 
 data class Workout(

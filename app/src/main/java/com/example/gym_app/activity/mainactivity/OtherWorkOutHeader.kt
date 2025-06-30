@@ -13,11 +13,12 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.gym_app.R
 
 
 @Composable
-fun OtherWorkOutHeader() {
+fun OtherWorkOutHeader(navController: NavController) {
     Row (
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -32,7 +33,7 @@ fun OtherWorkOutHeader() {
             text = "See All",
             color = colorResource(R.color.orange),
             modifier = Modifier.clickable{
-
+                navController.navigate("workout_screen")
             },
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp

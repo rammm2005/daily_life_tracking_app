@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.example.gym_app.activity.mainactivity.WorkoutDataProvider.getData
 import com.example.gym_app.screen.AppNavHost
 import com.example.gym_app.ui.theme.Gym_appTheme
 

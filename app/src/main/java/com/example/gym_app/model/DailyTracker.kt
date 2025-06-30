@@ -19,6 +19,12 @@ data class DailyTracker(
     val updatedAt: String? = null
 )
 
+data class DailyData(
+    val sleepHours: Int,
+    val workoutCompletedIds: List<String>,
+    val mealsEatenIds: List<String>
+)
+
 //data class DailyTrackerRequest(
 //    val userId: String,
 //    val date: String,

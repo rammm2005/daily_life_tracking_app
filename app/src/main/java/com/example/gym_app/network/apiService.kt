@@ -280,6 +280,10 @@ interface ApiService {
     @POST("api/tracker")
     suspend fun createDailyTracker(@Body tracker: DailyTracker): Response<DailyTrackerResponse>
 
+
+    @GET("api/tracker/summary/{userId}")
+    suspend fun getSummary(@Path("userId") userId: String): Response<SummaryResponse>
+
     @PUT("api/tracker/{id}")
     suspend fun updateDailyTracker(@Path("id") id: String, @Body tracker: DailyTracker): Response<DailyTrackerResponse>
 
@@ -429,4 +433,17 @@ data class SessionMessagesResponse(
 data class ChatSessionsResponse(
     val success: Boolean,
     val data: List<ChatSession>
+)
+
+
+// Summary Data
+data class SummaryResponse(
+    val success: Boolean,
+    val data: SummaryData
+)
+
+data class SummaryData(
+    val totalCalories: String,
+    val totalSleep: Int,
+    val totalWorkout: Int
 )

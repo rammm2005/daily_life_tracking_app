@@ -6,6 +6,7 @@ import android.util.Log
 import com.example.gym_app.model.DailyTracker
 import com.example.gym_app.network.ApiService
 import com.example.gym_app.network.RetrofitClient
+import com.example.gym_app.network.SummaryData
 import kotlinx.coroutines.flow.first
 
 class DailyTrackerRepository(private val context: Context) {
@@ -13,6 +14,26 @@ class DailyTrackerRepository(private val context: Context) {
     private val api: ApiService = RetrofitClient.instance
     private val sessionManager = SessionManager(context)
     private val userRepository = UserRepository()
+
+
+
+    suspend fun getDailySummary(): SummaryData? {
+        return try {
+            val email = sessionManager.userEmail.first() ?: return null
+            val userId = userRepository.getUserIdByEmail(email) ?: return null
+            val response = api.getSummary(userId)
+            if (response.isSuccessful && response.body()?.success == true) {
+                response.body()?.data
+            } else {
+                Log.e("DailyTrackerRepo", "Gagal ambil summary: ${response.code()} ${response.message()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("DailyTrackerRepo", "Exception ambil summary", e)
+            null
+        }
+    }
+
 
     suspend fun getAllTrackers(): List<DailyTracker>? {
         return try {

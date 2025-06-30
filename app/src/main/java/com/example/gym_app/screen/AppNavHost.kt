@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.gym_app.activity.mainactivity.MainButtomBar
-import com.example.gym_app.activity.mainactivity.WorkoutDataProvider.getData
 import com.example.gym_app.activity.meal.CreateUpdateMealScreen
 import com.example.gym_app.activity.tip.CreateUpdateTipScreen
 import com.example.gym_app.activity.tip.DetailTipScreen
@@ -55,7 +54,13 @@ fun AppNavHost(sessionManager: SessionManager) {
     val navController = rememberNavController()
     val role by sessionManager.userRole.collectAsState(initial = null)
     val isAdmin = role == "admin"
-    val workouts = getData();
+    val context = LocalContext.current
+    val repository = remember { WorkoutRepository(context) }
+    var workouts by remember { mutableStateOf<List<Workout>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        workouts = repository.getAllWorkouts() ?: emptyList()
+    }
 
 
     NavHost(navController = navController, startDestination = "main_screen") {

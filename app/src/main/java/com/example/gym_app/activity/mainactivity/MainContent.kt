@@ -32,9 +32,9 @@ fun MainContent (
         Spacer(Modifier.height(16.dp))
         MenuCard(navController = navController)
         Spacer(Modifier.height(16.dp))
-        OtherWorkOutHeader()
+        OtherWorkOutHeader(navController = navController)
         Spacer(Modifier.height(16.dp))
-        WorkOutList(workouts)
+        WorkOutList(navController = navController, workouts)
         Spacer(Modifier.height(16.dp))
 
     }
