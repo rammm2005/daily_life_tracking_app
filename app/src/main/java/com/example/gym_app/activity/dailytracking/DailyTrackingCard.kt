@@ -1,31 +1,36 @@
 package com.example.gym_app.activity.dailytracking
 
-
 import SessionManager
 import android.content.Context
 import androidx.compose.foundation.layout.*
-
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.gym_app.R
 import com.example.gym_app.model.DailyTracker
 import kotlinx.coroutines.flow.first
 
-
 @Composable
-fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: Context) {
+fun DailyTrackingCard(
+    tracker: DailyTracker,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onShowClick: () -> Unit,
+    context: Context
+) {
     val sessionManager = remember { SessionManager(context) }
-    val scope = rememberCoroutineScope()
-
     var currentUserEmail by remember { mutableStateOf<String?>(null) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         currentUserEmail = sessionManager.userEmail.first()
@@ -36,14 +41,14 @@ fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: C
     val moodIcon = when (tracker.mood.lowercase()) {
         "happy" -> "😊"
         "sad" -> "😞"
-        "Good" -> "😏"
+        "good" -> "😏"
         "neutral" -> "😐"
         else -> "😐"
     }
 
     val moodText = when (tracker.mood.lowercase()) {
         "happy" -> "Senang"
-        "Good" -> "Bagus"
+        "good" -> "Bagus"
         "sad" -> "Sedih"
         "neutral" -> "Biasa"
         else -> "Biasa"
@@ -64,7 +69,7 @@ fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: C
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = progressColor.copy(alpha = 0.08f))
+        colors = CardDefaults.cardColors(containerColor = colorResource(R.color.smoothMainColor))
     ) {
         Row(
             modifier = Modifier
@@ -72,13 +77,6 @@ fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: C
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = moodIcon,
-                fontSize = 28.sp
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
             Surface(
                 shape = RoundedCornerShape(50),
                 color = progressColor.copy(alpha = 0.3f),
@@ -88,7 +86,7 @@ fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: C
                     Text(
                         text = initials,
                         style = MaterialTheme.typography.titleMedium.copy(
-                            color = Color.Black,
+                            color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -98,24 +96,54 @@ fun DailyTrackingCard(tracker: DailyTracker, onEditClick: () -> Unit, context: C
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(tracker.date, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    tracker.date,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Mood: $moodText", fontSize = 14.sp)
-                Text("Berat: ${tracker.weightKg} kg", fontSize = 14.sp)
-                Text("Tidur: ${tracker.sleepHours} jam", fontSize = 14.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Mood: $moodText", fontSize = 14.sp, color = Color.White)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(moodIcon, fontSize = 18.sp)
+                }
+                Text("Berat: ${tracker.weightKg} kg", fontSize = 14.sp, color = Color.White)
+                Text("Tidur: ${tracker.sleepHours} jam", fontSize = 14.sp, color = Color.White)
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color.White)
+                }
 
-            Button(
-                onClick = onEditClick,
-                colors = ButtonDefaults.buttonColors(containerColor = progressColor),
-                modifier = Modifier.height(36.dp)
-            ) {
-                Text("Edit", color = Color.White, fontSize = 12.sp)
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Lihat Detail") },
+                        onClick = {
+                            menuExpanded = false
+                            onShowClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = {
+                            menuExpanded = false
+                            onEditClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Hapus") },
+                        onClick = {
+                            menuExpanded = false
+                            onDeleteClick()
+                        }
+                    )
+                }
             }
         }
     }
 }
-
-

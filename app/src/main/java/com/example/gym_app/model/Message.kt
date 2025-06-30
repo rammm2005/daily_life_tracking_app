@@ -4,9 +4,9 @@ import org.bson.types.ObjectId
 import java.util.Date
 
 data class Message(
-    val _id: ObjectId = ObjectId(),
-    val userId: ObjectId,
-    val timestamp: Date,
+    val _id: String? = null,
+    val userId: String? = null,
+    val timestamp: String?= null,
     val role: String,
     val content: String
 )

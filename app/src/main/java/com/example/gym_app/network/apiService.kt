@@ -1,5 +1,6 @@
 package com.example.gym_app.network
 
+import com.example.gym_app.model.ChatSession
 import com.example.gym_app.model.DailyTracker
 import com.example.gym_app.model.Goal
 import com.example.gym_app.model.Meal
@@ -285,6 +286,17 @@ interface ApiService {
     suspend fun deleteDailyTracker(@Path("id") id: String): Response<DailyTrackerResponse>
 
 
+    // ---------- CHAT BOT API ----------
+
+    @POST("/api/chatbot/chat")
+    suspend fun sendMessage(@Body request: ChatRequest): Response<ChatResponse>
+
+    @DELETE("/api/chatbot/chat/messages")
+    suspend fun deleteMessages(@Body request: DeleteMessagesRequest): Response<DeleteMessagesResponse>
+
+    @GET("api/chatbot/chat/sessions/{userId}")
+    suspend fun getChatSessions(@Path("userId") userId: String): Response<List<ChatSession>>
+
 }
 
 // ---------- AUTH ----------
@@ -385,4 +397,24 @@ data class DailyTrackerListResponse(
     val success: Boolean,
     val message: String?,
     val data: List<DailyTracker>
+)
+
+// --- Request & Response DTOs ---
+data class ChatRequest(
+    val userId: String,
+    val message: String
+)
+data class ChatResponse(
+    val reply: String,
+    val suggestions: List<String>
+)
+
+data class DeleteMessagesRequest(
+    val userId: String,
+    val messageIds: List<String>
+)
+
+data class DeleteMessagesResponse(
+    val message: String,
+    val deletedCount: Int
 )

@@ -1,6 +1,7 @@
 package com.example.gym_app.activity.dailytracking
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,11 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.gym_app.R
 import com.example.gym_app.model.DailyTracker
 import com.example.gym_app.model.Goal
 import com.example.gym_app.model.Meal
@@ -62,6 +65,7 @@ fun CreateUpdateDailyTrackingScreen(
     var stressLevel by remember { mutableStateOf("") }
 
     var weightError by remember { mutableStateOf(false) }
+    var moodError by remember { mutableStateOf(false) }
     var waterError by remember { mutableStateOf(false) }
     var sleepError by remember { mutableStateOf(false) }
     var caloriesBurned by remember { mutableStateOf("") }
@@ -129,6 +133,7 @@ fun CreateUpdateDailyTrackingScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .background(colorResource(id = R.color.mainColor))
             .padding(16.dp)
     ) {
         Row(
@@ -136,11 +141,12 @@ fun CreateUpdateDailyTrackingScreen(
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 10.dp)
         ) {
             IconButton(onClick = { navController.popBackStack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali", tint = Color.White)
             }
             Text(
                 text = if (isNew) "Buat Tracker Harian" else "Edit Tracker Harian",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White
             )
         }
 
@@ -185,7 +191,8 @@ fun CreateUpdateDailyTrackingScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        FilledTextField(mood, "Mood", false, null) { mood = it }
+        FilledTextField(mood, "Mood", moodError, "Mood tidak boleh kosong") { mood = it
+            moodError = it.isBlank() }
         Spacer(modifier = Modifier.height(12.dp))
         FilledTextField(notes, "Catatan", false, null) { notes = it }
         Spacer(modifier = Modifier.height(12.dp))
@@ -204,7 +211,7 @@ fun CreateUpdateDailyTrackingScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text("Workout yang Selesai", style = MaterialTheme.typography.titleMedium)
+        Text("Workout yang Selesai", style = MaterialTheme.typography.titleMedium, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
         workoutOptions.forEach { option ->
             val isChecked = workoutCompletedIds.contains(option._id)
@@ -243,7 +250,7 @@ fun CreateUpdateDailyTrackingScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Makanan yang Dimakan", style = MaterialTheme.typography.titleMedium)
+        Text("Makanan yang Dimakan", style = MaterialTheme.typography.titleMedium, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
         mealOptions.forEach { option ->
             val isChecked = mealsEatenIds.contains(option._id)
@@ -278,7 +285,7 @@ fun CreateUpdateDailyTrackingScreen(
 
         if (userGoals.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Goals Harian", style = MaterialTheme.typography.titleMedium)
+            Text("Goals Harian", style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(modifier = Modifier.height(8.dp))
             userGoals.forEach { goal ->
                 val checked = goalCheckins.contains(goal._id)
@@ -318,11 +325,12 @@ fun CreateUpdateDailyTrackingScreen(
             }
         } else {
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Goals Kamu Kosong \uD83D\uDE13", style = MaterialTheme.typography.titleMedium)
+            Text("Goals Kamu Kosong \uD83D\uDE13", style = MaterialTheme.typography.titleMedium, color = Color.White)
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 "Anda belum memiliki Goal yang tersedia",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorResource(R.color.gray)
             )
         }
 
@@ -333,8 +341,9 @@ fun CreateUpdateDailyTrackingScreen(
                 weightError = weight.isBlank()
                 waterError = water.isBlank()
                 sleepError = sleep.isBlank()
+                moodError = mood.isBlank()
 
-                if (weightError || waterError || sleepError) return@Button
+                if (weightError || waterError || sleepError || moodError) return@Button
 
                 scope.launch {
                     isProcessing = true
@@ -382,6 +391,7 @@ fun CreateUpdateDailyTrackingScreen(
         }
     }
 }
+
 
 @Composable
 fun FilledTextField(

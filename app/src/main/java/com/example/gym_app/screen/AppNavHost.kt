@@ -35,6 +35,7 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
+import com.example.gym_app.activity.chatbot.ChatBotScreen
 import com.example.gym_app.activity.dailytracking.CreateUpdateDailyTrackingScreen
 import com.example.gym_app.activity.dailytracking.DailyTrackingScreen
 import com.example.gym_app.activity.goal.GoalScreen
@@ -70,6 +71,11 @@ fun AppNavHost(sessionManager: SessionManager) {
                 }
         }
 
+
+
+        composable("chat_screen") {
+            ChatBotScreen()
+        }
 
         composable("goal_screen") {
             GoalScreen(navController)

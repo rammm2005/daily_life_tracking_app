@@ -71,6 +71,7 @@ fun MenuCard(navController: NavController) {
                                     "Workout" -> navController.navigate("workout_screen")
                                     "Schedule" -> navController.navigate("schedule_screen")
                                     "Progress" -> navController.navigate("progress_screen")
+                                    "Chat" -> navController.navigate("chat_screen")
                                     "Goal" -> navController.navigate("goal_screen")
                                     else -> {
                                         // navigasi lain atau kosong
