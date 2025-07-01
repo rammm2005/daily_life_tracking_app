@@ -37,6 +37,7 @@ import androidx.core.net.toUri
 import com.example.gym_app.activity.chatbot.ChatBotScreen
 import com.example.gym_app.activity.dailytracking.CreateUpdateDailyTrackingScreen
 import com.example.gym_app.activity.dailytracking.DailyTrackingScreen
+import com.example.gym_app.activity.faq.FaqScreen
 import com.example.gym_app.activity.goal.GoalScreen
 import com.example.gym_app.activity.meal.DetailMealScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
@@ -67,7 +68,7 @@ fun AppNavHost(sessionManager: SessionManager) {
         composable("main_screen") {
             Scaffold(
                     containerColor = Color(0Xff101322),
-                    bottomBar = { MainButtomBar() },
+                    bottomBar = { MainButtomBar(navController = navController) },
                    ) { innerPadding ->
                     MainContent(modifier = Modifier.padding(innerPadding)
                         .fillMaxSize(),
@@ -80,6 +81,11 @@ fun AppNavHost(sessionManager: SessionManager) {
 
         composable("chat_screen") {
             ChatBotScreen(navController)
+        }
+
+
+        composable("faq_screen") {
+            FaqScreen(navController)
         }
 
         composable("goal_screen") {
