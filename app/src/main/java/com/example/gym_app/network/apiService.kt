@@ -2,6 +2,9 @@ package com.example.gym_app.network
 
 import com.example.gym_app.model.ChatSession
 import com.example.gym_app.model.DailyTracker
+import com.example.gym_app.model.FavoriteListResponse
+import com.example.gym_app.model.FavoriteRequest
+import com.example.gym_app.model.FavoriteResponse
 import com.example.gym_app.model.Goal
 import com.example.gym_app.model.Meal
 import com.example.gym_app.model.Message
@@ -290,6 +293,23 @@ interface ApiService {
     @DELETE("api/tracker/{id}")
     suspend fun deleteDailyTracker(@Path("id") id: String): Response<DailyTrackerResponse>
 
+
+    // ---------- FAVORITE API ----------
+
+    @GET("api/favorite/user/{userId}")
+    suspend fun getFavoriteByUserId(@Path("userId") userId: String): Response<FavoriteListResponse>
+
+    @GET("api/favorite/{id}")
+    suspend fun getFavoriteById(@Path("id") id: String): Response<FavoriteResponse>
+
+    @POST("api/favorite")
+    suspend fun addToFavorite(@Body request: FavoriteRequest): Response<FavoriteResponse>
+
+    @PUT("api/favorite/remove")
+    suspend fun removeFromFavorite(@Body request: FavoriteRequest): Response<FavoriteResponse>
+
+    @DELETE("api/favorite/{id}")
+    suspend fun deleteFavorite(@Path("id") id: String): Response<FavoriteResponse>
 
     // ---------- CHAT BOT API ----------
 

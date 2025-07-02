@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,7 +42,11 @@ import androidx.compose.ui.zIndex
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.shadow
+import com.example.gym_app.repository.FavoriteRepository
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -52,9 +57,16 @@ fun DetailTipScreen(navController: NavController, tipId: String) {
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val favoriteRepo = remember { FavoriteRepository(context) }
+    var liked by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             tip = repository.getTipById(tipId)
+            val favoriteList = favoriteRepo.getFavorites()
+            liked = favoriteList?.any { it.tips.any { it._id == tipId } } == true
             Log.d("DetailTipScreen", "Tip: $tip")
         }
     }
@@ -77,6 +89,48 @@ fun DetailTipScreen(navController: NavController, tipId: String) {
                         )
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                if (liked) {
+                                    val success = favoriteRepo.removeFromFavorite(tipId = tipId)
+                                    if (success) {
+                                        liked = false
+                                        snackbarHostState.showSnackbar("Dihapus dari favorit")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Gagal menghapus dari favorit")
+                                    }
+                                } else {
+                                    val result = favoriteRepo.addToFavorite(tipId = tipId)
+                                    if (result != null) {
+                                        liked = true
+                                        snackbarHostState.showSnackbar("Ditambahkan ke favorit")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Gagal menambahkan ke favorit")
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .background(
+                                if (liked) Color.Red.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.5f),
+                                CircleShape
+                            )
+                            .padding(4.dp)
+                            .shadow(if (liked) 8.dp else 0.dp, CircleShape)
+                            .animateContentSize()
+                    ) {
+                        Icon(
+                            imageVector = if (liked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(if (liked) 30.dp else 24.dp)
+                                .animateContentSize()
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colorResource(id = R.color.mainColor)
                 )
@@ -89,6 +143,14 @@ fun DetailTipScreen(navController: NavController, tipId: String) {
                 .padding(padding)
                 .background(colorResource(id = R.color.mainColor))
         ) {
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            )
+
             if (tip == null) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -97,6 +159,8 @@ fun DetailTipScreen(navController: NavController, tipId: String) {
                     CircularProgressIndicator(color = Color.White)
                 }
             } else {
+
+
                 Column {
                     Column(
                         modifier = Modifier

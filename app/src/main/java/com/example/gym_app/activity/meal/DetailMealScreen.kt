@@ -12,6 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -34,6 +36,7 @@ import coil.compose.AsyncImage
 import com.example.gym_app.R
 import com.example.gym_app.component.ParsedText
 import com.example.gym_app.model.Meal
+import com.example.gym_app.repository.FavoriteRepository
 import com.example.gym_app.repository.MealRepository
 import kotlinx.coroutines.launch
 
@@ -46,9 +49,16 @@ fun DetailMealScreen(navController: NavController, mealId: String) {
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val favoriteRepo = remember { FavoriteRepository(context) }
+    var liked by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             meal = repository.getMealById(mealId)
+            val favoriteList = favoriteRepo.getFavorites()
+            liked = favoriteList?.any { it.meals.any { it._id == mealId } } == true
             Log.d("DetailMealScreen", "Meal: $meal")
         }
     }
@@ -69,6 +79,14 @@ fun DetailMealScreen(navController: NavController, mealId: String) {
                 )
             )
     ) {
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+
         if (meal == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -112,34 +130,75 @@ fun DetailMealScreen(navController: NavController, mealId: String) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        IconButton(
-                            onClick = { navController.popBackStack() },
-                            modifier = Modifier
-                                .background(
-                                    Color.White.copy(alpha = 0.2f),
-                                    CircleShape
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = { navController.popBackStack() },
+                                modifier = Modifier
+                                    .background(
+                                        Color.White.copy(alpha = 0.2f),
+                                        CircleShape
+                                    )
+                            ) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
                                 )
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.White
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Text(
+                                text = "Detail Meal",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Text(
-                            text = "Detail Meal",
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    if (liked) {
+                                        val success = favoriteRepo.removeFromFavorite(mealId = mealId)
+                                        if (success) {
+                                            liked = false
+                                            snackbarHostState.showSnackbar("Dihapus dari favorit")
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal menghapus dari favorit")
+                                        }
+                                    } else {
+                                        val result = favoriteRepo.addToFavorite(mealId = mealId)
+                                        if (result != null) {
+                                            liked = true
+                                            snackbarHostState.showSnackbar("Ditambahkan ke favorit")
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal menambahkan ke favorit")
+                                        }
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .background(
+                                    if (liked) Color.Red.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.2f),
+                                    CircleShape
+                                )
+                                .padding(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (liked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorite",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
                             )
-                        )
+                        }
                     }
-                }
+
+            }
 
                 Card(
                     modifier = Modifier

@@ -6,7 +6,15 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import com.example.gym_app.activity.mainactivity.MainButtomBar
 import com.example.gym_app.activity.meal.CreateUpdateMealScreen
 import com.example.gym_app.activity.tip.CreateUpdateTipScreen
@@ -34,12 +43,15 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.MealRepository
 import com.example.gym_app.repository.TipRepository
 import androidx.core.net.toUri
+import com.example.gym_app.R
 import com.example.gym_app.activity.chatbot.ChatBotScreen
 import com.example.gym_app.activity.dailytracking.CreateUpdateDailyTrackingScreen
 import com.example.gym_app.activity.dailytracking.DailyTrackingScreen
 import com.example.gym_app.activity.faq.FaqScreen
+import com.example.gym_app.activity.favorite.FavoriteScreen
 import com.example.gym_app.activity.goal.GoalScreen
 import com.example.gym_app.activity.meal.DetailMealScreen
+import com.example.gym_app.activity.profile.ProfileScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
 import com.example.gym_app.activity.schedule.DetailSchedule
 import com.example.gym_app.activity.schedule.ScheduleScreen
@@ -50,6 +62,7 @@ import com.example.gym_app.repository.ReminderRepository
 import com.example.gym_app.repository.WorkoutRepository
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(sessionManager: SessionManager) {
     val navController = rememberNavController()
@@ -85,8 +98,61 @@ fun AppNavHost(sessionManager: SessionManager) {
 
 
         composable("faq_screen") {
-            FaqScreen(navController)
+            Scaffold(
+                containerColor = Color(0Xff101322),
+                bottomBar = { MainButtomBar(navController = navController) },
+            ) { innerPadding ->
+                FaqScreen(
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
         }
+
+        composable("profile_screen") {
+            Scaffold(
+                containerColor = Color(0Xff101322),
+                bottomBar = { MainButtomBar(navController = navController) },
+            ) { innerPadding ->
+                ProfileScreen(
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+
+
+
+        composable("favorite_screen") {
+            Scaffold(
+                containerColor = Color(0xFF101322),
+                bottomBar = { MainButtomBar(navController = navController) },
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Favorites", color = Color.White) },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.Default.Close, contentDescription = "Back", tint = Color.White)
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = colorResource(R.color.smoothMainColor)
+                        )
+                    )
+                }
+            ) { innerPadding ->
+                FavoriteScreen(
+                    navController = navController,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                )
+            }
+        }
+
+
+
+
 
         composable("goal_screen") {
             GoalScreen(navController)

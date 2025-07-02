@@ -1,6 +1,8 @@
 package com.example.gym_app.activity.mainactivity
 
+import BannerCard
 import MenuCard
+import WorkOutList
 import android.widget.Space
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

@@ -9,8 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,7 +21,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gym_app.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+
+
+
+
+
+
+
 
 data class MenuItem(val iconRes: Int, val label: String)
 
@@ -40,6 +48,12 @@ val menuItems = listOf(
 @Composable
 fun MenuCard(navController: NavController) {
     val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(1000)
+        isLoading = false
+    }
 
     Card(
         modifier = Modifier
@@ -59,56 +73,80 @@ fun MenuCard(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(menuItems) { item ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            coroutineScope.launch {
-                                when(item.label) {
-                                    "Meal" -> navController.navigate("meal_screen")
-                                    "Tips" -> navController.navigate("tip_screen")
-                                    "Workout" -> navController.navigate("workout_screen")
-                                    "Schedule" -> navController.navigate("schedule_screen")
-                                    "Progress" -> navController.navigate("progress_screen")
-                                    "Chat" -> navController.navigate("chat_screen")
-                                    "Goal" -> navController.navigate("goal_screen")
-                                    else -> {
-                                        // navigasi lain atau kosong
+            if (isLoading) {
+                items(8) {
+                    MenuItemSkeleton()
+                }
+            } else {
+                items(menuItems) { item ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch {
+                                    when (item.label) {
+                                        "Meal" -> navController.navigate("meal_screen")
+                                        "Tips" -> navController.navigate("tip_screen")
+                                        "Workout" -> navController.navigate("workout_screen")
+                                        "Schedule" -> navController.navigate("schedule_screen")
+                                        "Progress" -> navController.navigate("progress_screen")
+                                        "Chat" -> navController.navigate("chat_screen")
+                                        "Goal" -> navController.navigate("goal_screen")
+                                        else -> {
+                                        }
                                     }
                                 }
-                            }
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        colorResource(R.color.mainColor),
-                                        colorResource(R.color.darkBlue)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
+                            },
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Image(
-                            painter = painterResource(id = item.iconRes),
-                            contentDescription = item.label,
-                            modifier = Modifier.size(30.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            colorResource(R.color.mainColor),
+                                            colorResource(R.color.darkBlue)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = item.iconRes),
+                                contentDescription = item.label,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = item.label,
+                            fontSize = 12.sp,
+                            color = Color.White
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = item.label,
-                        fontSize = 12.sp,
-                        color = Color.White
-                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MenuItemSkeleton() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.Gray.copy(alpha = 0.3f))
+        ) {}
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .width(40.dp)
+                .height(12.dp)
+                .background(Color.Gray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+        )
     }
 }

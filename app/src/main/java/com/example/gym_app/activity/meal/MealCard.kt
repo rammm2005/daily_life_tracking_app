@@ -48,25 +48,16 @@ fun MealCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable {
-                navController.navigate("detail_meal/${meal._id}")
-            },
+            .clickable { navController.navigate("detail_meal/${meal._id}") },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 12.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(180.dp)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             ) {
                 Image(
@@ -81,72 +72,43 @@ fun MealCard(
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.3f)
-                                )
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f))
                             )
                         )
                 )
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = meal.title,
-                    style = MaterialTheme.typography.headlineSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2D3748)
-                    ),
-                    modifier = Modifier.padding(bottom = 12.dp)
+                        color = Color(0xFF1A202C)
+                    )
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     AssistChip(
                         onClick = {},
-                        label = {
-                            Text(
-                                text = meal.category,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        },
+                        label = { Text(meal.category, fontSize = 12.sp) },
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Fastfood,
-                                contentDescription = "Kategori",
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Default.Fastfood, contentDescription = "Kategori", modifier = Modifier.size(16.dp))
                         },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = Color(0xFFE3F2FD),
-                            labelColor = Color(0xFF1976D2),
-                            leadingIconContentColor = Color(0xFF1976D2)
+                            labelColor = Color(0xFF1565C0),
+                            leadingIconContentColor = Color(0xFF1565C0)
                         ),
-                        border = BorderStroke(1.dp, Color(0xFF1976D2).copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, Color(0xFF1565C0).copy(alpha = 0.3f))
                     )
 
                     AssistChip(
                         onClick = {},
-                        label = {
-                            Text(
-                                text = "${meal.calories} kcal",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        },
+                        label = { Text("${meal.calories} kcal", fontSize = 12.sp) },
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.LocalFireDepartment,
-                                contentDescription = "Kalori",
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Default.LocalFireDepartment, contentDescription = "Kalori", modifier = Modifier.size(16.dp))
                         },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = Color(0xFFFFF3E0),
@@ -159,45 +121,31 @@ fun MealCard(
 
                 if (isAdmin) {
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilledTonalButton(
-                            onClick = {
-                                navController.navigate("edit_meal/${meal._id}")
-                            },
+                            onClick = { navController.navigate("edit_meal/${meal._id}") },
                             colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = Color(0xFFE8F5E8),
+                                containerColor = Color(0xFFE8F5E9),
                                 contentColor = Color(0xFF2E7D32)
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.padding(end = 3.dp)
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Edit", fontSize = 12.sp)
                         }
 
                         FilledTonalButton(
-                            onClick = {
-                                showDeleteDialog = true
-                            },
+                            onClick = { showDeleteDialog = true },
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = Color(0xFFFFEBEE),
                                 contentColor = Color(0xFFD32F2F)
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Hapus",
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Hapus", fontSize = 12.sp)
                         }
                     }
                 }
@@ -207,55 +155,20 @@ fun MealCard(
 
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = {
-                showDeleteDialog = false
-            },
+            onDismissRequest = { showDeleteDialog = false },
             icon = {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = "Warning",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier.size(32.dp)
-                )
+                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFD32F2F), modifier = Modifier.size(32.dp))
             },
             title = {
-                Text(
-                    text = "Konfirmasi Hapus",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2D3748)
-                    ),
-                    textAlign = TextAlign.Center
-                )
+                Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = Color(0xFF1A202C), fontSize = 18.sp)
             },
             text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Apakah Anda yakin ingin menghapus meal:",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color(0xFF4A5568)
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "\"${meal.title}\"",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2D3748)
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tindakan ini tidak dapat dibatalkan.",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF718096)
-                        ),
-                        textAlign = TextAlign.Center
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Apakah Anda yakin ingin menghapus meal ini?", textAlign = TextAlign.Center)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("\"${meal.title}\"", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Tindakan ini tidak dapat dibatalkan.", fontSize = 12.sp, color = Color.Gray)
                 }
             },
             confirmButton = {
@@ -265,12 +178,7 @@ fun MealCard(
                         meal._id?.let { id ->
                             CoroutineScope(Dispatchers.IO).launch {
                                 val deleted = mealRepository.deleteMeal(id)
-                                if (deleted) {
-                                    Log.d("MealCard", "Meal berhasil dihapus")
-                                    onDeleted()
-                                } else {
-                                    Log.e("MealCard", "Gagal menghapus meal")
-                                }
+                                if (deleted) onDeleted()
                             }
                         }
                     },
@@ -280,31 +188,20 @@ fun MealCard(
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(
-                        text = "Hapus",
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text("Hapus")
                 }
             },
             dismissButton = {
                 OutlinedButton(
-                    onClick = {
-                        showDeleteDialog = false
-                    },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFF4A5568)
-                    ),
+                    onClick = { showDeleteDialog = false },
                     border = BorderStroke(1.dp, Color(0xFF4A5568)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(
-                        text = "Batal",
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text("Batal", color = Color(0xFF4A5568))
                 }
             },
             containerColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(14.dp)
         )
     }
 }

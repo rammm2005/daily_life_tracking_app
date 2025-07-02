@@ -40,6 +40,7 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.Abs
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
+import com.example.gym_app.repository.FavoriteRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,13 +59,22 @@ fun WorkoutDetail(navController: NavController, workoutId: String) {
     var currentVideoTitle by remember { mutableStateOf("") }
 
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val favoriteRepo = remember { FavoriteRepository(context) }
+    var liked by remember { mutableStateOf(false) }
+
+
 
     LaunchedEffect(workoutId) {
         coroutineScope.launch {
             workout = repo.getWorkoutById(workoutId)
+            val favoriteList = favoriteRepo.getFavorites()
+            liked = favoriteList?.any { it.workouts.any { it._id == workoutId } } == true
             isLoading = false
         }
     }
+
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -121,21 +131,37 @@ fun WorkoutDetail(navController: NavController, workoutId: String) {
                             }
 
                             Row {
-                                var liked by remember { mutableStateOf(false) }
                                 val context = LocalContext.current
 
                                 IconButton(
-                                    onClick = { liked = !liked },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            if (liked) {
+                                                val success = favoriteRepo.removeFromFavorite(workoutId = workoutId)
+                                                if (success) {
+                                                    liked = false
+                                                    snackbarHostState.showSnackbar("Dihapus dari favorit")
+                                                } else {
+                                                    snackbarHostState.showSnackbar("Gagal menghapus dari favorit")
+                                                }
+                                            } else {
+                                                val result = favoriteRepo.addToFavorite(workoutId = workoutId)
+                                                if (result != null) {
+                                                    liked = true
+                                                    snackbarHostState.showSnackbar("Ditambahkan ke favorit")
+                                                } else {
+                                                    snackbarHostState.showSnackbar("Gagal menambahkan ke favorit")
+                                                }
+                                            }
+                                        }
+                                    },
                                     modifier = Modifier
                                         .background(
                                             if (liked) Color.Red.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.5f),
                                             CircleShape
                                         )
                                         .padding(4.dp)
-                                        .shadow(
-                                            if (liked) 8.dp else 0.dp,
-                                            CircleShape
-                                        )
+                                        .shadow(if (liked) 8.dp else 0.dp, CircleShape)
                                         .animateContentSize()
                                 ) {
                                     Icon(
@@ -147,6 +173,7 @@ fun WorkoutDetail(navController: NavController, workoutId: String) {
                                             .animateContentSize()
                                     )
                                 }
+
 
 
                                 IconButton(
@@ -352,6 +379,16 @@ fun WorkoutDetail(navController: NavController, workoutId: String) {
                 }
             }
         }
+
+
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        )
+
 
         if (isLoading) {
             Box(

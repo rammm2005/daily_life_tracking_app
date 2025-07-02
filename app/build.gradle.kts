@@ -85,6 +85,8 @@ dependencies {
     // Bycrpyt Password
     implementation ("org.mindrot:jbcrypt:0.4")
 
+//    Skeleton Loading
+    implementation("com.google.accompanist:accompanist-placeholder-material:0.32.0")
 
     // YouTube Player
     implementation ("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")

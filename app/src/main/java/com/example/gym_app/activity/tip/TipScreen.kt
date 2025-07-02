@@ -24,6 +24,7 @@ import com.example.gym_app.model.Tip
 import com.example.gym_app.repository.TipRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,14 +33,18 @@ fun TipScreen(navController: NavController, isAdmin: Boolean) {
     val context = LocalContext.current
     val api = remember { TipRepository(context) }
     var tips by remember { mutableStateOf<List<Tip>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
+        isLoading = true
+        delay(1000)
         val response = api.getAllTips()
         Log.d("TIPS", "Result: $response")
         tips = response ?: emptyList()
+        isLoading = false
     }
-
 
     Scaffold(
         containerColor = colorResource(id = R.color.mainColor),
@@ -72,31 +77,102 @@ fun TipScreen(navController: NavController, isAdmin: Boolean) {
             }
         }
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(colorResource(id = R.color.mainColor))
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            if (tips.isEmpty()) {
-                item {
-                    EmptyTipsView()
-                }
-            } else {
-                items(tips) { tip ->
-                    TipCard(tip = tip, isAdmin = isAdmin, navController = navController, tipRepository = api,
-                        onDeleted = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val response = api.getAllTips()
-                                Log.d("TIPS", "Result After Delete: $response")
-                                tips = response ?: emptyList()
-                            }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                placeholder = { Text("Cari tips...", color = Color.Gray) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF2C2C2E),
+                    unfocusedContainerColor = Color(0xFF2C2C2E),
+                    cursorColor = Color.White,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+
+            LazyColumn {
+                if (isLoading) {
+                    items(5) {
+                        TipCardSkeleton()
+                    }
+                } else {
+                    val filteredTips = tips.filter {
+                        it.title.contains(searchQuery, ignoreCase = true)
+                    }
+
+                    if (filteredTips.isEmpty()) {
+                        item { EmptyTipsView() }
+                    } else {
+                        items(filteredTips) { tip ->
+                            TipCard(
+                                tip = tip,
+                                isAdmin = isAdmin,
+                                navController = navController,
+                                tipRepository = api,
+                                onDeleted = {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        val response = api.getAllTips()
+                                        tips = response ?: emptyList()
+                                    }
+                                }
+                            )
                         }
-                        )
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun TipCardSkeleton() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1E))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(Color.Gray.copy(alpha = 0.3f))
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .height(16.dp)
+                        .fillMaxWidth(0.5f)
+                        .background(Color.Gray.copy(alpha = 0.3f))
+                )
+                Box(
+                    modifier = Modifier
+                        .height(12.dp)
+                        .fillMaxWidth(0.7f)
+                        .background(Color.Gray.copy(alpha = 0.3f))
+                )
+            }
+        }
+    }
+}
