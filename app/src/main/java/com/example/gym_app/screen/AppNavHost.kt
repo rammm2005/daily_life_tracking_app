@@ -51,6 +51,9 @@ import com.example.gym_app.activity.faq.FaqScreen
 import com.example.gym_app.activity.favorite.FavoriteScreen
 import com.example.gym_app.activity.goal.GoalScreen
 import com.example.gym_app.activity.meal.DetailMealScreen
+import com.example.gym_app.activity.profile.ChangePasswordScreen
+import com.example.gym_app.activity.profile.EditProfileScreen
+import com.example.gym_app.activity.profile.NotificationsScreen
 import com.example.gym_app.activity.profile.ProfileScreen
 import com.example.gym_app.activity.schedule.CreateUpdateScheduleScreen
 import com.example.gym_app.activity.schedule.DetailSchedule
@@ -90,6 +93,11 @@ fun AppNavHost(sessionManager: SessionManager) {
                 }
         }
 
+
+
+        composable("edit_profile") { EditProfileScreen(navController) }
+        composable("change_password") { ChangePasswordScreen(navController) }
+        composable("notifications") { NotificationsScreen(navController) }
 
 
         composable("chat_screen") {

@@ -33,6 +33,16 @@ interface ApiService {
     @POST("api/auth/resend-otp")
     suspend fun resendOtp(@Body resendOtpRequest: ResendOtpRequest): Response<ApiResponse>
 
+    @POST("/api/auth/forgot-password")
+    suspend fun forgotPassword(
+        @Body request: ForgotPasswordRequest
+    ): Response<ForgotPasswordResponse>
+
+    @POST("/api/auth/reset-password")
+    suspend fun resetPassword(
+        @Body request: ResetPasswordRequest
+    ): Response<ResetPasswordResponse>
+
     // ---------- USER ----------
     @GET("api/users/email/{email}")
     suspend fun getUserByEmail(@Path("email") email: String): Response<UserResponse>
@@ -324,7 +334,24 @@ interface ApiService {
 
     @GET("api/chatbot/chat/session/{sessionId}/messages")
     suspend fun getMessagesBySessionId(@Path("sessionId") sessionId: String): Response<SessionMessagesResponse>
+
+    // ---------- PROFILE API ----------
+
+    @GET("/api/users/{email}")
+    suspend fun spesifictUser(
+        @Path("email") email: String,
+    ): Response<UserGetResponse>
+    @PUT("/api/users/email/{email}")
+    suspend fun updateProfile(
+        @Path("email") email: String,
+        @Body request: UserData
+    ): Response<UserUpdateResponse>
+
+
 }
+
+
+
 
 // ---------- AUTH ----------
 data class LoginRequest(val email: String, val password: String)
@@ -467,3 +494,54 @@ data class SummaryData(
     val totalSleep: Int,
     val totalWorkout: Int
 )
+
+data class UserUpdateResponse(
+    val success: Boolean,
+    val message: String,
+    val user: UserUpdate
+)
+
+data class UserGetResponse(
+    val success: Boolean,
+    val message: String,
+    val user: UserData
+)
+
+data class UserUpdate(
+    val _id: String,
+    val name: String,
+    val email: String,
+    val age: Int,
+    val gender: String,
+    val height_cm: Int,
+    val weight_kg: Int
+)
+data class UserData(
+    val name: String?,
+    val age: Int?,
+    val gender: String?,
+    val height_cm: Int?,
+    val weight_kg: Int?
+)
+
+
+// Forgot Passoword
+data class ForgotPasswordRequest(
+    val email: String
+)
+data class ForgotPasswordResponse(
+    val success: Boolean,
+    val message: String
+)
+
+data class ResetPasswordRequest(
+    val email: String,
+    val otp: String,
+    val newPassword: String
+)
+
+data class ResetPasswordResponse(
+    val success: Boolean,
+    val message: String
+)
+

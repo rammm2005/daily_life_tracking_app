@@ -120,11 +120,11 @@ fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ProfileOption("Edit Profile", Icons.Default.Edit, "")
-            ProfileOption("Change Password", Icons.Default.LockPerson, "")
-            ProfileOption("Privacy Settings", Icons.Default.PrivacyTip, "")
-            ProfileOption("Notifications", Icons.Default.NotificationsNone, "")
-            ProfileOption("Help & Support", Icons.Default.Help, "faq_screen")
+            ProfileOption("Edit Profile", Icons.Default.Edit, "edit_profile", navController)
+            ProfileOption("Change Password", Icons.Default.LockPerson, "change_password", navController)
+            ProfileOption("Notifications", Icons.Default.NotificationsNone, "notifications", navController)
+            ProfileOption("Help & Support", Icons.Default.Help, "faq_screen", navController)
+
 
             Spacer(modifier = Modifier.weight(1f))
 
