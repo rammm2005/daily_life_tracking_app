@@ -5,38 +5,68 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.example.gym_app.repository.ReminderRepository
 import com.example.gym_app.screen.AppNavHost
 import com.example.gym_app.ui.theme.Gym_appTheme
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
-//    private val workouts = getData();
     private val sessionManager by lazy { SessionManager(this) }
+    private val reminderRepository by lazy { ReminderRepository(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-//            val navController = rememberNavController()
-                Gym_appTheme {
-                    AppNavHost(sessionManager = sessionManager)
+            val snackbarHostState = remember { SnackbarHostState() }
+
+            Gym_appTheme {
+                AppNavHost(sessionManager = sessionManager)
+
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            LaunchedEffect(Unit) {
+                val reminders = reminderRepository.getAllReminders() ?: emptyList()
+
+                val today = LocalDate.now()
+                val todayDay = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("id"))
+                val todayDate = today.dayOfMonth
+
+                val messages = listOf(
+                    "📌 Jangan lupa: %s hari ini ya!",
+                    "🔔 Waktunya: %s",
+                    "✅ Reminder: %s untuk hari ini",
+                    "🚀 Ayo kerjakan: %s",
+                    "📝 Catatan penting: %s"
+                )
+
+                reminders.filter {
+                    it.status == "active" && (
+                            it.repeat == "daily" ||
+                                    (it.repeat == "weekly" && it.days.contains(todayDay)) ||
+                                    (it.repeat == "monthly" && it.schedule.split("-")[2].split(" ")[0].toInt() == todayDate)
+                            )
+                }.forEach { reminder ->
+                    val template = messages.random()
+                    val message = String.format(template, reminder.title)
+                    snackbarHostState.showSnackbar(message)
                 }
-//                Scaffold(
-//                    containerColor = Color(0Xff101322),
-//                    bottomBar = { MainButtomBar() },
-//                   ) { innerPadding ->
-//                    MainContent(modifier = Modifier.padding(innerPadding)
-//                        .fillMaxSize(),
-//                        workouts = workouts,
-//                        navController = navController  )
-//                }
+            }
         }
     }
 }
